@@ -18,6 +18,9 @@ import com.facebook.presto.operator.aggregation.GroupedAccumulator;
 import com.facebook.presto.spi.Page;
 import com.facebook.presto.spi.PageBuilder;
 import com.facebook.presto.spi.block.BlockBuilder;
+import com.facebook.presto.spi.block.BlockBuilderStatus;
+import com.facebook.presto.spi.block.LongArrayBlockBuilder;
+import com.facebook.presto.spi.block.VariableWidthBlockBuilder;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.sql.planner.plan.AggregationNode.Step;
 import com.facebook.presto.sql.planner.plan.PlanNodeId;
@@ -26,17 +29,34 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import io.airlift.units.DataSize;
 import io.airlift.units.DataSize.Unit;
+import com.facebook.presto.spi.block.Block;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
+
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiFields;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.store.FSDirectory;
 
 import static com.facebook.presto.operator.GroupByHash.createGroupByHash;
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
+import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
+
+import java.io.IOException;
+import java.nio.file.Paths;
 
 public class HashAggregationOperator
         implements Operator
@@ -225,31 +245,32 @@ public class HashAggregationOperator
     @Override
     public Page getOutput()
     {
-        if (outputIterator == null || !outputIterator.hasNext()) {
-            // current output iterator is done
-            outputIterator = null;
+//        if (outputIterator == null || !outputIterator.hasNext()) {
+//            // current output iterator is done
+//            outputIterator = null;
+//
+//            // no data
+//            if (aggregationBuilder == null) {
+//                return null;
+//            }
+//
+//            // only flush if we are finishing or the aggregation builder is full
+//            if (!finishing && !aggregationBuilder.isFull()) {
+//                return null;
+//            }
+//
+//            outputIterator = aggregationBuilder.build();
+//            aggregationBuilder = null;
+//
+//            if (!outputIterator.hasNext()) {
+//                // current output iterator is done
+//                outputIterator = null;
+//                return null;
+//            }
+//        }
 
-            // no data
-            if (aggregationBuilder == null) {
-                return null;
-            }
-
-            // only flush if we are finishing or the aggregation builder is full
-            if (!finishing && !aggregationBuilder.isFull()) {
-                return null;
-            }
-
-            outputIterator = aggregationBuilder.build();
-            aggregationBuilder = null;
-
-            if (!outputIterator.hasNext()) {
-                // current output iterator is done
-                outputIterator = null;
-                return null;
-            }
-        }
-
-        return outputIterator.next();
+//        return outputIterator.next();
+        return newLucenePage();
     }
 
     private static List<Type> toTypes(List<? extends Type> groupByType, Step step, List<AccumulatorFactory> factories, Optional<Integer> hashChannel)
@@ -263,6 +284,90 @@ public class HashAggregationOperator
             types.add(new Aggregator(factory, step).getType());
         }
         return types.build();
+    }
+    
+    //added by cubeli for luecne
+    private Page newLucenePage(){
+    	  	
+    	
+    	/*//test1 start======================
+        BlockBuilder varcharBlockBuilder = VARCHAR.createBlockBuilder(new BlockBuilderStatus(), 5);
+        VARCHAR.writeString(varcharBlockBuilder, "2-HIGH");
+        VARCHAR.writeString(varcharBlockBuilder, "5-LOW");
+        VARCHAR.writeString(varcharBlockBuilder, "1-URGENT");
+        VARCHAR.writeString(varcharBlockBuilder, "4-NOT SPECIFIED");
+        VARCHAR.writeString(varcharBlockBuilder, "3-MEDIUM");
+        Block expectedBlock = varcharBlockBuilder.build();
+        
+        BlockBuilder longBlockBuilder1 = BIGINT.createBlockBuilder(new BlockBuilderStatus(), 5);
+        BIGINT.writeLong(longBlockBuilder1, 100);
+        BIGINT.writeLong(longBlockBuilder1, 101);
+        BIGINT.writeLong(longBlockBuilder1, 102);
+        BIGINT.writeLong(longBlockBuilder1, 103);
+        BIGINT.writeLong(longBlockBuilder1, 104);  
+        
+        BlockBuilder longBlockBuilder2 = BIGINT.createBlockBuilder(new BlockBuilderStatus(), 5);
+        BIGINT.writeLong(longBlockBuilder2, 300091);
+        BIGINT.writeLong(longBlockBuilder2, 300589);
+        BIGINT.writeLong(longBlockBuilder2, 300343);
+        BIGINT.writeLong(longBlockBuilder2, 300254);
+        BIGINT.writeLong(longBlockBuilder2, 298723);
+
+        Page expectedPage = new Page(varcharBlockBuilder, longBlockBuilder1, longBlockBuilder2);
+    	//test1 end=============================================================
+*/        
+    	 
+    	Page expectedPage = null;
+		try {
+			Map<String, Long> map = GetGroupByResult();
+	    	int expectedEntryNum = map.size();
+	    	
+	    	BlockBuilder fieldBlockBuilder = VARCHAR.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
+	    	BlockBuilder hashBlockBuilder = BIGINT.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
+	    	BlockBuilder countBlockBuilder = BIGINT.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
+	    	
+	    	int count = 0;
+	    	for(Entry<String, Long> entry: GetGroupByResult().entrySet()){
+	    		
+	    		VARCHAR.writeString(fieldBlockBuilder, entry.getKey());
+	    		BIGINT.writeLong(hashBlockBuilder, count++);
+	    		BIGINT.writeLong(countBlockBuilder, entry.getValue());
+	    	}
+	    	
+	    	expectedPage = new Page(fieldBlockBuilder, hashBlockBuilder, countBlockBuilder);			
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+    	
+    	
+        finishing = true;
+    	return expectedPage;  	
+    }
+    
+    private Map<String, Long> GetGroupByResult() throws IOException{
+    	
+    	IndexReader reader = null;
+    	Map<String,Long> returnMap = new HashMap<String, Long>();
+		try {
+			reader = DirectoryReader.open(FSDirectory.open(Paths.get("/home/liyong/workspace-neno/lucenetest/index")));
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		IndexSearcher searcher = new IndexSearcher(reader);
+		
+		Terms terms = MultiFields.getTerms(searcher.getIndexReader(), "orderpriority");
+		TermsEnum te = terms.iterator();
+		while(te.next() != null){
+			
+			String name = te.term().utf8ToString();
+			int count = te.docFreq();
+			returnMap.put(name, Long.valueOf(count));
+		}
+		
+		return returnMap;
     }
 
     private static class GroupByHashAggregationBuilder
