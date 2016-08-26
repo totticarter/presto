@@ -40,7 +40,7 @@
         <air.check.skip-license>false</air.check.skip-license>
 
         <air.check.fail-checkstyle>true</air.check.fail-checkstyle>
-        <air.check.skip-checkstyle>false</air.check.skip-checkstyle>
+        <air.check.skip-checkstyle>true</air.check.skip-checkstyle>
 
         <air.java.version>1.8.0-60</air.java.version>
         <air.maven.version>3.3.9</air.maven.version>
@@ -75,43 +75,48 @@
         <module>presto-atop</module>
         <module>presto-spi</module>
         <module>presto-array</module>
+
+	<!--
         <module>presto-jmx</module>
-        <module>presto-record-decoder</module>
-        <module>presto-kafka</module>
         <module>presto-redis</module>
         <module>presto-cassandra</module>
         <module>presto-blackhole</module>
+        <module>presto-example-http</module>
+        <module>presto-local-file</module>
+        <module>presto-tpch</module>
+        <module>presto-raptor</module>
+        <module>presto-mysql</module>
+        <module>presto-postgresql</module>
+        <module>presto-mongodb</module>
+        <module>presto-ml</module>
+        <module>presto-server-rpm</module>
+        <module>presto-testing-server-launcher</module>
+        <module>presto-kafka</module>
+        <module>presto-tests</module>
+        <module>presto-docs</module>
         <module>presto-orc</module>
         <module>presto-hive</module>
         <module>presto-hive-hadoop1</module>
         <module>presto-hive-hadoop2</module>
         <module>presto-hive-cdh4</module>
         <module>presto-hive-cdh5</module>
+        <module>presto-lucene</module>
+	-->
+
+        <module>presto-record-decoder</module>
         <module>presto-teradata-functions</module>
-        <module>presto-example-http</module>
-        <module>presto-local-file</module>
-        <module>presto-tpch</module>
-        <module>presto-raptor</module>
         <module>presto-base-jdbc</module>
-        <module>presto-mysql</module>
-        <module>presto-postgresql</module>
-        <module>presto-mongodb</module>
         <module>presto-bytecode</module>
         <module>presto-client</module>
         <module>presto-parser</module>
         <module>presto-main</module>
-        <module>presto-ml</module>
         <module>presto-benchmark</module>
-        <module>presto-tests</module>
         <module>presto-product-tests</module>
         <module>presto-jdbc</module>
         <module>presto-cli</module>
         <module>presto-benchmark-driver</module>
         <module>presto-server</module>
-        <module>presto-server-rpm</module>
-        <module>presto-docs</module>
         <module>presto-verifier</module>
-        <module>presto-testing-server-launcher</module>
         <module>presto-plugin-toolkit</module>
     </modules>
 
