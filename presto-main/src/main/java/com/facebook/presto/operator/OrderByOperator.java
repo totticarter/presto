@@ -15,6 +15,9 @@ package com.facebook.presto.operator;
 
 import com.facebook.presto.spi.Page;
 import com.facebook.presto.spi.PageBuilder;
+import com.facebook.presto.spi.block.Block;
+import com.facebook.presto.spi.block.BlockBuilder;
+import com.facebook.presto.spi.block.BlockBuilderStatus;
 import com.facebook.presto.spi.block.SortOrder;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.sql.planner.plan.PlanNodeId;
@@ -23,6 +26,9 @@ import com.google.common.primitives.Ints;
 
 import java.util.List;
 
+import static com.facebook.presto.spi.type.BigintType.BIGINT;
+import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
+import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
@@ -183,7 +189,7 @@ public class OrderByOperator
     @Override
     public Page getOutput()
     {
-        if (state != State.HAS_OUTPUT) {
+ /*       if (state != State.HAS_OUTPUT) {
             return null;
         }
 
@@ -203,10 +209,45 @@ public class OrderByOperator
         }
 
         Page page = pageBuilder.build();
-        return page;
+        return page;*/
+    	
+    	return newLucenePage();
+    	
     }
 
-    private static List<Type> toTypes(List<? extends Type> sourceTypes, List<Integer> outputChannels)
+    private Page newLucenePage() {
+		
+    	//test1 start======================
+//        BlockBuilder varcharBlockBuilder = VARCHAR.createBlockBuilder(new BlockBuilderStatus(), 5);
+//        VARCHAR.writeString(varcharBlockBuilder, "2-HIGH");
+//        VARCHAR.writeString(varcharBlockBuilder, "5-LOW");
+//        VARCHAR.writeString(varcharBlockBuilder, "1-URGENT");
+//        VARCHAR.writeString(varcharBlockBuilder, "4-NOT SPECIFIED");
+//        VARCHAR.writeString(varcharBlockBuilder, "3-MEDIUM");
+//        Block expectedBlock = varcharBlockBuilder.build();
+        
+        BlockBuilder longBlockBuilder1 = BIGINT.createBlockBuilder(new BlockBuilderStatus(), 5);
+        BIGINT.writeLong(longBlockBuilder1, 0);
+        BIGINT.writeLong(longBlockBuilder1, 1);
+        BIGINT.writeLong(longBlockBuilder1, 1);
+        BIGINT.writeLong(longBlockBuilder1, 5);
+        BIGINT.writeLong(longBlockBuilder1, 7);  
+        
+        
+        BlockBuilder longBlockBuilder2 = BIGINT.createBlockBuilder(new BlockBuilderStatus(), 5);
+        BIGINT.writeLong(longBlockBuilder2, 5);
+        BIGINT.writeLong(longBlockBuilder2, 2);
+        BIGINT.writeLong(longBlockBuilder2, 1);
+        BIGINT.writeLong(longBlockBuilder2, 5);
+        BIGINT.writeLong(longBlockBuilder2, 7);  
+        
+
+        Page expectedPage = new Page(longBlockBuilder1, longBlockBuilder2);
+        state = State.FINISHED;
+        return expectedPage;
+	}
+
+	private static List<Type> toTypes(List<? extends Type> sourceTypes, List<Integer> outputChannels)
     {
         ImmutableList.Builder<Type> types = ImmutableList.builder();
         for (int channel : outputChannels) {
