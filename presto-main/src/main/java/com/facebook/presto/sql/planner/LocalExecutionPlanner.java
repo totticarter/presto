@@ -1885,7 +1885,8 @@ public class LocalExecutionPlanner
                     accumulatorFactories,
                     hashChannel,
                     10_000,
-                    maxPartialAggregationMemorySize);
+                    maxPartialAggregationMemorySize,
+                    node.getGroupBy());
 
             return new PhysicalOperation(operatorFactory, outputMappings.build(), source);
         }

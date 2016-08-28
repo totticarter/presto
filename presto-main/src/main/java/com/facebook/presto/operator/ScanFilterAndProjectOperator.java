@@ -22,6 +22,9 @@ import com.facebook.presto.spi.PageBuilder;
 import com.facebook.presto.spi.RecordCursor;
 import com.facebook.presto.spi.RecordPageSource;
 import com.facebook.presto.spi.UpdatablePageSource;
+import com.facebook.presto.spi.block.Block;
+import com.facebook.presto.spi.block.BlockBuilder;
+import com.facebook.presto.spi.block.BlockBuilderStatus;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.split.PageSourceProvider;
 import com.facebook.presto.sql.planner.plan.PlanNodeId;
@@ -32,11 +35,26 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiFields;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.store.FSDirectory;
+
 import static com.facebook.presto.SystemSessionProperties.getProcessingOptimization;
+import static com.facebook.presto.spi.type.BigintType.BIGINT;
+import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
+import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
 import static com.facebook.presto.sql.analyzer.FeaturesConfig.ProcessingOptimization.COLUMNAR;
 import static com.facebook.presto.sql.analyzer.FeaturesConfig.ProcessingOptimization.COLUMNAR_DICTIONARY;
 import static com.facebook.presto.sql.analyzer.FeaturesConfig.ProcessingOptimization.DISABLED;
@@ -285,6 +303,65 @@ public class ScanFilterAndProjectOperator
         pageBuilderMemoryContext.setBytes(pageBuilder.getRetainedSizeInBytes());
         return page;
     }
+    
+//    @Override
+//    public Page getOutput(){
+//    	
+//    	return newLuceneCountPage();
+//    }
+    	
+	private Page newLuceneCountPage() {
+
+		Page expectedPage = null;
+		try {
+			Map<String, Long> map = getCountResult();
+	    	int expectedEntryNum = map.size();
+	    	
+	    	BlockBuilder fieldBlockBuilder = VARCHAR.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
+	    	BlockBuilder hashBlockBuilder = BIGINT.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
+	    	BlockBuilder countBlockBuilder = BIGINT.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
+	    	
+	    	int count = 0;
+	    	for(Entry<String, Long> entry: map.entrySet()){
+	    		
+	    		VARCHAR.writeString(fieldBlockBuilder, entry.getKey());
+	    		BIGINT.writeLong(hashBlockBuilder, count++);
+	    		BIGINT.writeLong(countBlockBuilder, entry.getValue());
+	    	}
+	    	
+	    	expectedPage = new Page(fieldBlockBuilder, hashBlockBuilder, countBlockBuilder);		
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    	
+        finishing = true;
+    	return expectedPage;
+	}
+    	
+    
+	private Map<String, Long> getCountResult() throws IOException {
+
+		IndexReader reader = null;
+		Map<String, Long> returnMap = new HashMap<String, Long>();
+		try {
+			reader = DirectoryReader.open(FSDirectory.open(Paths.get("/home/liyong/workspace-neno/lucenetest/index")));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		IndexSearcher searcher = new IndexSearcher(reader);
+
+		Terms terms = MultiFields.getTerms(searcher.getIndexReader(), "orderpriority");
+		TermsEnum te = terms.iterator();
+		while (te.next() != null) {
+
+			String name = te.term().utf8ToString();
+			int count = te.docFreq();
+			returnMap.put(name, Long.valueOf(count));
+		}
+
+		return returnMap;
+	}
 
     private void createSourceIfNecessary()
     {

@@ -23,6 +23,7 @@ import com.facebook.presto.spi.block.LongArrayBlockBuilder;
 import com.facebook.presto.spi.block.VariableWidthBlockBuilder;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.sql.planner.plan.AggregationNode.Step;
+import com.facebook.presto.sql.planner.Symbol;
 import com.facebook.presto.sql.planner.plan.PlanNodeId;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
@@ -77,6 +78,9 @@ public class HashAggregationOperator
         private final List<Type> types;
         private boolean closed;
         private final long maxPartialMemory;
+        
+        //added by cubeli
+        private  List<Symbol> groupByKeys;
 
         public HashAggregationOperatorFactory(
                 int operatorId,
@@ -87,7 +91,9 @@ public class HashAggregationOperator
                 List<AccumulatorFactory> accumulatorFactories,
                 Optional<Integer> hashChannel,
                 int expectedGroups,
-                DataSize maxPartialMemory)
+                DataSize maxPartialMemory,
+                List<Symbol> groupByKeys
+                )
         {
             this.operatorId = operatorId;
             this.planNodeId = requireNonNull(planNodeId, "planNodeId is null");
@@ -100,6 +106,9 @@ public class HashAggregationOperator
             this.maxPartialMemory = requireNonNull(maxPartialMemory, "maxPartialMemory is null").toBytes();
 
             this.types = toTypes(groupByTypes, step, accumulatorFactories, hashChannel);
+            
+            //added by cubeli
+            this.groupByKeys = ImmutableList.copyOf(groupByKeys);
         }
 
         @Override
@@ -127,7 +136,8 @@ public class HashAggregationOperator
                     step,
                     accumulatorFactories,
                     hashChannel,
-                    expectedGroups);
+                    expectedGroups,
+                    groupByKeys);
             return hashAggregationOperator;
         }
 
@@ -149,7 +159,8 @@ public class HashAggregationOperator
                     accumulatorFactories,
                     hashChannel,
                     expectedGroups,
-                    new DataSize(maxPartialMemory, Unit.BYTE));
+                    new DataSize(maxPartialMemory, Unit.BYTE),
+                     groupByKeys);
         }
     }
 
@@ -166,6 +177,8 @@ public class HashAggregationOperator
     private GroupByHashAggregationBuilder aggregationBuilder;
     private Iterator<Page> outputIterator;
     private boolean finishing;
+    
+    private List<Symbol> groupByKeys;
 
     public HashAggregationOperator(
             OperatorContext operatorContext,
@@ -174,7 +187,8 @@ public class HashAggregationOperator
             Step step,
             List<AccumulatorFactory> accumulatorFactories,
             Optional<Integer> hashChannel,
-            int expectedGroups)
+            int expectedGroups,
+            List<Symbol> groupByKeys)
     {
         this.operatorContext = requireNonNull(operatorContext, "operatorContext is null");
         requireNonNull(step, "step is null");
@@ -188,6 +202,9 @@ public class HashAggregationOperator
         this.step = step;
         this.expectedGroups = expectedGroups;
         this.types = toTypes(groupByTypes, step, accumulatorFactories, hashChannel);
+        
+        //added by cubeli
+        this.groupByKeys = ImmutableList.copyOf(groupByKeys); 
     }
 
     @Override
@@ -243,9 +260,9 @@ public class HashAggregationOperator
         aggregationBuilder.processPage(page);
     }
 
-    @Override
-    public Page getOutput()
-    {
+//    @Override
+//    public Page getOutput()
+//    {
 //        if (outputIterator == null || !outputIterator.hasNext()) {
 //            // current output iterator is done
 //            outputIterator = null;
@@ -269,9 +286,16 @@ public class HashAggregationOperator
 //                return null;
 //            }
 //        }
-
+//
 //        return outputIterator.next();
-        return newLuceneCountPage();
+//    
+//    }
+    
+    //added by cubeli for lucene
+    @Override
+    public Page getOutput(){
+    	
+    	   return getLucenePage();
     }
 
     private static List<Type> toTypes(List<? extends Type> groupByType, Step step, List<AccumulatorFactory> factories, Optional<Integer> hashChannel)
@@ -288,78 +312,37 @@ public class HashAggregationOperator
     }
     
     //added by cubeli for luecne
-    private Page newLuceneCountPage(){
-    	  	
-    	
-    	//test1 start======================
-        BlockBuilder varcharBlockBuilder = VARCHAR.createBlockBuilder(new BlockBuilderStatus(), 5);
-        VARCHAR.writeString(varcharBlockBuilder, "2-HIGH");
-        VARCHAR.writeString(varcharBlockBuilder, "5-LOW");
-        VARCHAR.writeString(varcharBlockBuilder, "1-URGENT");
-        VARCHAR.writeString(varcharBlockBuilder, "4-NOT SPECIFIED");
-        VARCHAR.writeString(varcharBlockBuilder, "3-MEDIUM");
-        Block expectedBlock = varcharBlockBuilder.build();
-        
-        BlockBuilder longBlockBuilder1 = BIGINT.createBlockBuilder(new BlockBuilderStatus(), 5);
-        BIGINT.writeLong(longBlockBuilder1, 100);
-        BIGINT.writeLong(longBlockBuilder1, 101);
-        BIGINT.writeLong(longBlockBuilder1, 102);
-        BIGINT.writeLong(longBlockBuilder1, 103);
-        BIGINT.writeLong(longBlockBuilder1, 104);  
-        
-//        BlockBuilder longBlockBuilder2 = BIGINT.createBlockBuilder(new BlockBuilderStatus(), 5);
-//        BIGINT.writeLong(longBlockBuilder2, 300091);
-//        BIGINT.writeLong(longBlockBuilder2, 300589);
-//        BIGINT.writeLong(longBlockBuilder2, 300343);
-//        BIGINT.writeLong(longBlockBuilder2, 300254);
-//        BIGINT.writeLong(longBlockBuilder2, 298723);
-     
-        
-        BlockBuilder doubleBlockBuilder2 = DOUBLE.createBlockBuilder(new BlockBuilderStatus(), 5);
-        DOUBLE.writeDouble(doubleBlockBuilder2, 2.3);
-        DOUBLE.writeDouble(doubleBlockBuilder2, 2.3);
-        DOUBLE.writeDouble(doubleBlockBuilder2, 3.4);
-        DOUBLE.writeDouble(doubleBlockBuilder2, 4.5);
-        DOUBLE.writeDouble(doubleBlockBuilder2, 5.6);
-        
+	private Page getLucenePage() {
 
-        Page expectedPage = new Page(varcharBlockBuilder, longBlockBuilder1, doubleBlockBuilder2);
-        finishing = true;
-        return expectedPage;
-    	//test1 end=============================================================
-      
-    	 
-/*    	Page expectedPage = null;
+		Page expectedPage = null;
 		try {
 			Map<String, Long> map = getCountResult();
-	    	int expectedEntryNum = map.size();
-	    	
-	    	BlockBuilder fieldBlockBuilder = VARCHAR.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
-	    	BlockBuilder hashBlockBuilder = BIGINT.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
-	    	BlockBuilder countBlockBuilder = BIGINT.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
-	    	
-	    	int count = 0;
-	    	for(Entry<String, Long> entry: map.entrySet()){
-	    		
-	    		VARCHAR.writeString(fieldBlockBuilder, entry.getKey());
-	    		BIGINT.writeLong(hashBlockBuilder, count++);
-	    		BIGINT.writeLong(countBlockBuilder, entry.getValue());
-	    	}
-	    	
-	    	expectedPage = new Page(fieldBlockBuilder, hashBlockBuilder, countBlockBuilder);		
-			
+			int expectedEntryNum = map.size();
+
+			BlockBuilder fieldBlockBuilder = VARCHAR.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
+			BlockBuilder hashBlockBuilder = BIGINT.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
+			BlockBuilder countBlockBuilder = BIGINT.createBlockBuilder(new BlockBuilderStatus(), expectedEntryNum);
+
+			int count = 0;
+			for (Entry<String, Long> entry : map.entrySet()) {
+
+				VARCHAR.writeString(fieldBlockBuilder, entry.getKey());
+				BIGINT.writeLong(hashBlockBuilder, count++);
+				BIGINT.writeLong(countBlockBuilder, entry.getValue());
+			}
+
+			expectedPage = new Page(fieldBlockBuilder, hashBlockBuilder, countBlockBuilder);
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-    	
-        finishing = true;
-    	return expectedPage;  	*/
-    }
+
+		finishing = true;
+		return expectedPage;
+	}
     
-//    private Map<String, Long> getSumResult() throws IOException{
-//    	
-//    	
-//    }
+    
+    
     
     private Map<String, Long> getCountResult() throws IOException{
     	
@@ -384,6 +367,45 @@ public class HashAggregationOperator
 		
 		return returnMap;
     }
+    
+	private Page newLuceneCountPageForTest() {
+
+		// test1 start======================
+		BlockBuilder varcharBlockBuilder = VARCHAR.createBlockBuilder(new BlockBuilderStatus(), 5);
+		VARCHAR.writeString(varcharBlockBuilder, "2-HIGH");
+		VARCHAR.writeString(varcharBlockBuilder, "5-LOW");
+		VARCHAR.writeString(varcharBlockBuilder, "1-URGENT");
+		VARCHAR.writeString(varcharBlockBuilder, "4-NOT SPECIFIED");
+		VARCHAR.writeString(varcharBlockBuilder, "3-MEDIUM");
+		Block expectedBlock = varcharBlockBuilder.build();
+
+		BlockBuilder longBlockBuilder1 = BIGINT.createBlockBuilder(new BlockBuilderStatus(), 5);
+		BIGINT.writeLong(longBlockBuilder1, 100);
+		BIGINT.writeLong(longBlockBuilder1, 101);
+		BIGINT.writeLong(longBlockBuilder1, 102);
+		BIGINT.writeLong(longBlockBuilder1, 103);
+		BIGINT.writeLong(longBlockBuilder1, 104);
+
+		// BlockBuilder longBlockBuilder2 = BIGINT.createBlockBuilder(new
+		// BlockBuilderStatus(), 5);
+		// BIGINT.writeLong(longBlockBuilder2, 300091);
+		// BIGINT.writeLong(longBlockBuilder2, 300589);
+		// BIGINT.writeLong(longBlockBuilder2, 300343);
+		// BIGINT.writeLong(longBlockBuilder2, 300254);
+		// BIGINT.writeLong(longBlockBuilder2, 298723);
+
+		// for sum(totalprice)
+		BlockBuilder doubleBlockBuilder2 = DOUBLE.createBlockBuilder(new BlockBuilderStatus(), 5);
+		DOUBLE.writeDouble(doubleBlockBuilder2, 2.3);
+		DOUBLE.writeDouble(doubleBlockBuilder2, 2.3);
+		DOUBLE.writeDouble(doubleBlockBuilder2, 3.4);
+		DOUBLE.writeDouble(doubleBlockBuilder2, 4.5);
+		DOUBLE.writeDouble(doubleBlockBuilder2, 5.6);
+
+		Page expectedPage = new Page(varcharBlockBuilder, longBlockBuilder1, doubleBlockBuilder2);
+		finishing = true;
+		return expectedPage;
+	}
 
     private static class GroupByHashAggregationBuilder
     {
