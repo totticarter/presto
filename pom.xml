@@ -72,18 +72,17 @@
     </properties>
 
     <modules>
-        <module>presto-atop</module>
         <module>presto-spi</module>
         <module>presto-array</module>
 
 	<!--
+        <module>presto-atop</module>
         <module>presto-jmx</module>
         <module>presto-redis</module>
         <module>presto-cassandra</module>
         <module>presto-blackhole</module>
         <module>presto-example-http</module>
         <module>presto-local-file</module>
-        <module>presto-tpch</module>
         <module>presto-raptor</module>
         <module>presto-mysql</module>
         <module>presto-postgresql</module>
@@ -101,22 +100,23 @@
         <module>presto-hive-cdh4</module>
         <module>presto-hive-cdh5</module>
         <module>presto-lucene</module>
-	-->
-
-        <module>presto-record-decoder</module>
         <module>presto-teradata-functions</module>
-        <module>presto-base-jdbc</module>
-        <module>presto-bytecode</module>
-        <module>presto-client</module>
-        <module>presto-parser</module>
-        <module>presto-main</module>
         <module>presto-benchmark</module>
         <module>presto-product-tests</module>
-        <module>presto-jdbc</module>
+        <module>presto-verifier</module>
+        <module>presto-client</module>
         <module>presto-cli</module>
+	-->
+
+        <module>presto-tpch</module>
+        <module>presto-record-decoder</module>
+        <module>presto-base-jdbc</module>
+        <module>presto-bytecode</module>
+        <module>presto-parser</module>
+        <module>presto-main</module>
+        <module>presto-jdbc</module>
         <module>presto-benchmark-driver</module>
         <module>presto-server</module>
-        <module>presto-verifier</module>
         <module>presto-plugin-toolkit</module>
     </modules>
 

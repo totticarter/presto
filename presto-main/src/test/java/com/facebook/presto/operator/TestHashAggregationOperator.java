@@ -139,7 +139,8 @@ public class TestHashAggregationOperator
                         countBooleanColumn.bind(ImmutableList.of(4), Optional.empty(), Optional.empty(), 1.0)),
                 rowPagesBuilder.getHashChannel(),
                 100_000,
-                new DataSize(16, MEGABYTE));
+                new DataSize(16, MEGABYTE),
+                null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
@@ -190,7 +191,8 @@ public class TestHashAggregationOperator
                         maxVarcharColumn.bind(ImmutableList.of(2), Optional.empty(), Optional.empty(), 1.0)),
                 rowPagesBuilder.getHashChannel(),
                 100_000,
-                new DataSize(16, MEGABYTE));
+                new DataSize(16, MEGABYTE),
+                null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
@@ -225,7 +227,8 @@ public class TestHashAggregationOperator
                 ImmutableList.of(COUNT.bind(ImmutableList.of(0), Optional.empty(), Optional.empty(), 1.0)),
                 rowPagesBuilder.getHashChannel(),
                 100_000,
-                new DataSize(16, MEGABYTE));
+                new DataSize(16, MEGABYTE),
+                null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
@@ -260,7 +263,8 @@ public class TestHashAggregationOperator
                 ImmutableList.of(COUNT.bind(ImmutableList.of(0), Optional.empty(), Optional.empty(), 1.0)),
                 rowPagesBuilder.getHashChannel(),
                 100_000,
-                new DataSize(16, MEGABYTE));
+                new DataSize(16, MEGABYTE),
+                null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
@@ -291,7 +295,8 @@ public class TestHashAggregationOperator
                         LONG_AVERAGE.bind(ImmutableList.of(1), Optional.empty(), Optional.empty(), 1.0)),
                 rowPagesBuilder.getHashChannel(),
                 100_000,
-                new DataSize(16, MEGABYTE));
+                new DataSize(16, MEGABYTE),
+                null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
@@ -320,7 +325,8 @@ public class TestHashAggregationOperator
                 ImmutableList.of(LONG_SUM.bind(ImmutableList.of(0), Optional.empty(), Optional.empty(), 1.0)),
                 rowPagesBuilder.getHashChannel(),
                 100_000,
-                new DataSize(16, MEGABYTE));
+                new DataSize(16, MEGABYTE),
+                null);
 
         DriverContext driverContext = createTaskContext(executor, TEST_SESSION, new DataSize(1, Unit.KILOBYTE))
                 .addPipelineContext(true, true)
