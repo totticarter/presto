@@ -1,1 +1,3 @@
-mvn package -DskipTests -T2C
+mvn install -DskipTests -T2C
+./buildeclipse.sh
+./updateserver.sh

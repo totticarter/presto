@@ -140,6 +140,8 @@ public class TestHashAggregationOperator
                 rowPagesBuilder.getHashChannel(),
                 100_000,
                 new DataSize(16, MEGABYTE),
+                null,
+                null,
                 null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
@@ -192,6 +194,8 @@ public class TestHashAggregationOperator
                 rowPagesBuilder.getHashChannel(),
                 100_000,
                 new DataSize(16, MEGABYTE),
+                null,
+                null,
                 null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
@@ -228,6 +232,8 @@ public class TestHashAggregationOperator
                 rowPagesBuilder.getHashChannel(),
                 100_000,
                 new DataSize(16, MEGABYTE),
+                null,
+                null,
                 null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
@@ -264,6 +270,8 @@ public class TestHashAggregationOperator
                 rowPagesBuilder.getHashChannel(),
                 100_000,
                 new DataSize(16, MEGABYTE),
+                null,
+                null,
                 null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
@@ -296,6 +304,8 @@ public class TestHashAggregationOperator
                 rowPagesBuilder.getHashChannel(),
                 100_000,
                 new DataSize(16, MEGABYTE),
+                null,
+                null,
                 null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
@@ -326,6 +336,8 @@ public class TestHashAggregationOperator
                 rowPagesBuilder.getHashChannel(),
                 100_000,
                 new DataSize(16, MEGABYTE),
+                null,
+                null,
                 null);
 
         DriverContext driverContext = createTaskContext(executor, TEST_SESSION, new DataSize(1, Unit.KILOBYTE))

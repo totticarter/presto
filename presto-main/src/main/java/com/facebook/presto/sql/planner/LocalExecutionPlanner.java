@@ -1837,9 +1837,24 @@ public class LocalExecutionPlanner
 
             List<Symbol> aggregationOutputSymbols = new ArrayList<>();
             List<AccumulatorFactory> accumulatorFactories = new ArrayList<>();
+            
+            //added by cubeli for lucene
+            Map<String, String> accumulatTypeAndColumnNameMap = new HashMap<String, String>();
+            
             for (Map.Entry<Symbol, FunctionCall> entry : node.getAggregations().entrySet()) {
-                Symbol symbol = entry.getKey();
-
+               Symbol symbol = entry.getKey();
+                
+               //added by cubeli for lucene start
+            	Symbol accumulateType = entry.getKey();
+                String columnName = null;
+                for (Expression argument : entry.getValue().getArguments()) {
+                	SymbolReference sr = (SymbolReference)argument;
+                	columnName = sr.getName();
+                    break;
+                }
+                accumulatTypeAndColumnNameMap.put(accumulateType.getName(), columnName);
+              //added by cubeli for lucene end
+                
                 accumulatorFactories.add(buildAccumulatorFactory(
                         source,
                         node.getFunctions().get(symbol),
@@ -1886,6 +1901,8 @@ public class LocalExecutionPlanner
                     hashChannel,
                     10_000,
                     maxPartialAggregationMemorySize,
+                    outputMappings.build(),
+                    accumulatTypeAndColumnNameMap,
                     node.getGroupBy());
 
             return new PhysicalOperation(operatorFactory, outputMappings.build(), source);

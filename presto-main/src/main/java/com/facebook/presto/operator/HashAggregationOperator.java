@@ -27,6 +27,7 @@ import com.facebook.presto.sql.planner.Symbol;
 import com.facebook.presto.sql.planner.plan.PlanNodeId;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
 import io.airlift.units.DataSize;
 import io.airlift.units.DataSize.Unit;
@@ -80,7 +81,9 @@ public class HashAggregationOperator
         private final long maxPartialMemory;
         
         //added by cubeli
-        private  List<Symbol> groupByKeys;
+        private Map<Symbol, Integer> outputMappings;
+        private Map<String, String> accumulatTypeAndColumnNameMap;
+        private List<Symbol> groupByKeys;
 
         public HashAggregationOperatorFactory(
                 int operatorId,
@@ -92,6 +95,8 @@ public class HashAggregationOperator
                 Optional<Integer> hashChannel,
                 int expectedGroups,
                 DataSize maxPartialMemory,
+                Map<Symbol, Integer> outputMappings,
+                Map<String, String> accumulatTypeAndColumnNameMap,
                 List<Symbol> groupByKeys
                 )
         {
@@ -108,7 +113,9 @@ public class HashAggregationOperator
             this.types = toTypes(groupByTypes, step, accumulatorFactories, hashChannel);
             
             //added by cubeli
-            this.groupByKeys = ImmutableList.copyOf(groupByKeys);
+            this.outputMappings = outputMappings;
+            this.accumulatTypeAndColumnNameMap = accumulatTypeAndColumnNameMap;
+            this.groupByKeys = groupByKeys;
         }
 
         @Override
@@ -137,6 +144,8 @@ public class HashAggregationOperator
                     accumulatorFactories,
                     hashChannel,
                     expectedGroups,
+                    outputMappings,
+                    accumulatTypeAndColumnNameMap,
                     groupByKeys);
             return hashAggregationOperator;
         }
@@ -160,7 +169,9 @@ public class HashAggregationOperator
                     hashChannel,
                     expectedGroups,
                     new DataSize(maxPartialMemory, Unit.BYTE),
-                     groupByKeys);
+                    outputMappings,
+                    accumulatTypeAndColumnNameMap,
+                    groupByKeys);
         }
     }
 
@@ -178,9 +189,14 @@ public class HashAggregationOperator
     private Iterator<Page> outputIterator;
     private boolean finishing;
     
+    //added by cubeli for lucene 
+    private Map<Symbol, Integer> outputMappings;
+    private Map<String, String> accumulatTypeAndColumnNameMap;
     private List<Symbol> groupByKeys;
+    public static boolean readLucene = false;
 
-    public HashAggregationOperator(
+    @SuppressWarnings("unchecked")
+	public HashAggregationOperator(
             OperatorContext operatorContext,
             List<Type> groupByTypes,
             List<Integer> groupByChannels,
@@ -188,6 +204,8 @@ public class HashAggregationOperator
             List<AccumulatorFactory> accumulatorFactories,
             Optional<Integer> hashChannel,
             int expectedGroups,
+            Map<Symbol, Integer> outputMappings,
+            Map<String, String> accumulatTypeAndColumnNameMap,
             List<Symbol> groupByKeys)
     {
         this.operatorContext = requireNonNull(operatorContext, "operatorContext is null");
@@ -204,7 +222,10 @@ public class HashAggregationOperator
         this.types = toTypes(groupByTypes, step, accumulatorFactories, hashChannel);
         
         //added by cubeli
-        this.groupByKeys = ImmutableList.copyOf(groupByKeys); 
+        this.outputMappings = outputMappings; 
+        this.accumulatTypeAndColumnNameMap = accumulatTypeAndColumnNameMap;
+        this.groupByKeys = groupByKeys;
+        
     }
 
     @Override
@@ -257,7 +278,18 @@ public class HashAggregationOperator
         else {
             checkState(!aggregationBuilder.isFull(), "Aggregation buffer is full");
         }
-        aggregationBuilder.processPage(page);
+        
+        /*
+        * modified by cubeli for lucene
+        * if invoke processPage(page) every time, the partial accumulation result will be
+        * accumulated, and the incorrect result will be got in the final accumulation
+        */
+        if(!readLucene){
+        
+        	readLucene = true;
+        	aggregationBuilder.processPage(page);        	
+        }
+
     }
 
 //    @Override
@@ -291,12 +323,53 @@ public class HashAggregationOperator
 //    
 //    }
     
-    //added by cubeli for lucene
+	/*
+	 * modified by cubeli
+	 * the partial accumulation result will be got from read lucene index
+	 * the final accumulation result will be got from presto
+	 * 
+	 */
     @Override
     public Page getOutput(){
     	
-    	   return getLucenePage();
+		if (step == Step.PARTIAL) {
+			
+			return getLucenePage();
+		} else {
+
+			return getPrestoPage();
+		}
+    	
     }
+    
+	public Page getPrestoPage() {
+
+		if (outputIterator == null || !outputIterator.hasNext()) {
+			// current output iterator is done
+			outputIterator = null;
+
+			// no data
+			if (aggregationBuilder == null) {
+				return null;
+			}
+
+			// only flush if we are finishing or the aggregation builder is full
+			if (!finishing && !aggregationBuilder.isFull()) {
+				return null;
+			}
+
+			outputIterator = aggregationBuilder.build();
+			aggregationBuilder = null;
+
+			if (!outputIterator.hasNext()) {
+				// current output iterator is done
+				outputIterator = null;
+				return null;
+			}
+		}
+
+		return outputIterator.next();
+	}
 
     private static List<Type> toTypes(List<? extends Type> groupByType, Step step, List<AccumulatorFactory> factories, Optional<Integer> hashChannel)
     {
@@ -311,7 +384,32 @@ public class HashAggregationOperator
         return types.build();
     }
     
-    //added by cubeli for luecne
+    //added by cubeli for luecne 
+    private Page getLucenePageWithMeta() throws Exception{
+    	
+    	Page expectedPage = null;
+    	for(Entry<String, String> entry: accumulatTypeAndColumnNameMap.entrySet()){
+    		
+    		String accuType = entry.getKey();
+    		accuType = accuType.substring(0, 2);
+    		if(accuType.equals("sum")){
+    			
+    			//TODO
+    		}else if(accuType.equals("avg")){
+    			
+    			//TODO
+    		}else if(accuType.equals("count")){
+    			
+    			String groupByColumnName = groupByKeys.get(0).getName();
+    		}else{
+    			
+    			throw new Exception();
+    		}
+    	}
+    	
+    	return expectedPage;
+    	
+    }
 	private Page getLucenePage() {
 
 		Page expectedPage = null;
@@ -341,7 +439,29 @@ public class HashAggregationOperator
 		return expectedPage;
 	}
     
-    
+    private Map<String, Long> getLuceneResult() throws IOException{
+    	
+    	IndexReader reader = null;
+    	Map<String,Long> returnMap = new HashMap<String, Long>();
+		try {
+			reader = DirectoryReader.open(FSDirectory.open(Paths.get("/home/liyong/workspace-neno/lucenetest/index")));
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		IndexSearcher searcher = new IndexSearcher(reader);
+		
+		Terms terms = MultiFields.getTerms(searcher.getIndexReader(), "orderpriority");
+		TermsEnum te = terms.iterator();
+		while(te.next() != null){
+			
+			String name = te.term().utf8ToString();
+			int count = te.docFreq();
+			returnMap.put(name, Long.valueOf(count));
+		}
+		
+		return returnMap;
+    }
     
     
     private Map<String, Long> getCountResult() throws IOException{

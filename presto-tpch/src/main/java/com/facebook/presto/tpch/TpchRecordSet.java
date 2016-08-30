@@ -122,9 +122,13 @@ public class TpchRecordSet<E extends TpchEntity>
                 row = null;
                 return false;
             }
-
-            row = rows.next();
-            return true;
+            
+            closed = true;
+            row = null;
+            return false;
+            
+//            row = rows.next();
+//            return true;
         }
 
         @Override
