@@ -19,18 +19,29 @@ import com.facebook.presto.spi.block.Block;
 import com.facebook.presto.spi.block.BlockBuilder;
 import com.facebook.presto.spi.block.BlockBuilderStatus;
 import com.facebook.presto.spi.block.SortOrder;
+import com.facebook.presto.spi.type.BigintType;
+import com.facebook.presto.spi.type.DoubleType;
 import com.facebook.presto.spi.type.Type;
+import com.facebook.presto.spi.type.VarcharType;
+import com.facebook.presto.sql.planner.Symbol;
 import com.facebook.presto.sql.planner.plan.PlanNodeId;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
+import com.sun.xml.internal.xsom.impl.scd.Iterators.Map;
 
 import java.util.List;
+
+import org.apache.lucene.queryparser.ext.Extensions.Pair;
+import org.jboss.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class OrderByOperator
         implements Operator
@@ -47,6 +58,9 @@ public class OrderByOperator
         private final List<SortOrder> sortOrder;
         private final List<Type> types;
         private boolean closed;
+        
+        //added by cubeli for lucene
+        private List<Symbol> outputs;
 
         public OrderByOperatorFactory(
                 int operatorId,
@@ -55,7 +69,8 @@ public class OrderByOperator
                 List<Integer> outputChannels,
                 int expectedPositions,
                 List<Integer> sortChannels,
-                List<SortOrder> sortOrder)
+                List<SortOrder> sortOrder,
+                List<Symbol> outputs)
         {
             this.operatorId = operatorId;
             this.planNodeId = requireNonNull(planNodeId, "planNodeId is null");
@@ -66,6 +81,7 @@ public class OrderByOperator
             this.sortOrder = ImmutableList.copyOf(requireNonNull(sortOrder, "sortOrder is null"));
 
             this.types = toTypes(sourceTypes, outputChannels);
+            this.outputs = outputs;
         }
 
         @Override
@@ -86,7 +102,8 @@ public class OrderByOperator
                     outputChannels,
                     expectedPositions,
                     sortChannels,
-                    sortOrder);
+                    sortOrder,
+                    outputs);
         }
 
         @Override
@@ -98,7 +115,7 @@ public class OrderByOperator
         @Override
         public OperatorFactory duplicate()
         {
-            return new OrderByOperatorFactory(operatorId, planNodeId, sourceTypes, outputChannels, expectedPositions, sortChannels, sortOrder);
+            return new OrderByOperatorFactory(operatorId, planNodeId, sourceTypes, outputChannels, expectedPositions, sortChannels, sortOrder,outputs);
         }
     }
 
@@ -121,6 +138,9 @@ public class OrderByOperator
     private int currentPosition;
 
     private State state = State.NEEDS_INPUT;
+    
+    //added by cubeli for lucene
+    private List<Symbol> outputs;
 
     public OrderByOperator(
             OperatorContext operatorContext,
@@ -128,7 +148,8 @@ public class OrderByOperator
             List<Integer> outputChannels,
             int expectedPositions,
             List<Integer> sortChannels,
-            List<SortOrder> sortOrder)
+            List<SortOrder> sortOrder,
+            List<Symbol> outputs)
     {
         this.operatorContext = requireNonNull(operatorContext, "operatorContext is null");
         this.outputChannels = Ints.toArray(requireNonNull(outputChannels, "outputChannels is null"));
@@ -139,6 +160,7 @@ public class OrderByOperator
         this.pageIndex = new PagesIndex(sourceTypes, expectedPositions);
 
         this.pageBuilder = new PageBuilder(this.types);
+        this.outputs = outputs;
     }
 
     @Override
@@ -211,10 +233,91 @@ public class OrderByOperator
         Page page = pageBuilder.build();
         return page;*/
     	
-    	return newLucenePage();
+//    	return newLucenePage();
+    	
+    	return getLucenePage2();
     	
     }
 
+    
+    Page getLucenePage2(){
+    	
+    	
+//    	HashMap<String, Type> columnNameAndType = new HashMap<String, Type>();
+//    	for(int i = 0; i < types.size(); i++){
+//    		
+//    		columnNameAndType.put(outputs.get(i).getName(),  types.get(i));
+//    	}
+    	
+    	
+    	
+    	List<List<String>> luceneOrderResult = newTestLuceneResult();
+    	int entryNum = luceneOrderResult.size();
+    	
+    	List<Pair<Type, BlockBuilder>> type2Bb = new ArrayList<Pair<Type, BlockBuilder>>();
+    	for(Type type : types){
+    		
+    		BlockBuilder bb = HashAggregationOperator.getBlockbuilderFromType(type, entryNum);
+    		type2Bb.add(new Pair<Type, BlockBuilder>(type, bb));
+    	}
+    	
+
+    	for(int i = 0; i < types.size(); i++){
+    		
+    		Type type = types.get(i);
+			BlockBuilder blockBuilder = type2Bb.get(i).cud;
+			for(List<String> line: luceneOrderResult){
+				
+				String accuValue = line.get(i);			
+				if(type instanceof BigintType){
+					
+					long value = Long.parseLong(accuValue);
+					BIGINT.writeLong(blockBuilder, value);
+				}else if(type instanceof VarcharType){
+					
+					String value = accuValue;
+					VARCHAR.writeString(blockBuilder, value);
+				}else if(type instanceof DoubleType){
+					
+					Double value = Double.parseDouble(accuValue);
+					DOUBLE.writeDouble(blockBuilder, value);
+				}					
+			}
+    	}
+    	
+		BlockBuilder bb[] = new BlockBuilder[type2Bb.size()];
+		int idx = 0;
+		for(Pair<Type, BlockBuilder> pair : type2Bb){
+			
+			BlockBuilder blockBuilder = pair.cud;
+			bb[idx++] = blockBuilder;
+		}
+		Page expectedPage = new Page(bb);
+		state = State.FINISHED;
+    	return expectedPage;
+    	
+    }
+    
+    
+    List<List<String>> newTestLuceneResult(){
+    	
+    	List<List<String>> rlList = new ArrayList<List<String>>();
+    	List<String> l1 = new ArrayList<String>();
+    	l1.add("one");l1.add("111");
+    	
+    	List<String> l2 = new ArrayList<String>();
+    	l2.add("two");l2.add("222");
+    	
+    	List<String> l3 = new ArrayList<String>();
+    	l3.add("three");l3.add("333");
+    	
+    	rlList.add(l1); rlList.add(l2); rlList.add(l3);
+
+    	
+    	return rlList;
+    }
+    
+    //for testing
     private Page newLucenePage() {
 		
     	//test1 start======================

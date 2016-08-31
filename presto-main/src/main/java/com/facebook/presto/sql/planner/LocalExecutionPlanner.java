@@ -785,7 +785,8 @@ public class LocalExecutionPlanner
                     outputChannels.build(),
                     10_000,
                     orderByChannels,
-                    sortOrder.build());
+                    sortOrder.build(),
+                    node.getSource().getOutputSymbols());
 
             return new PhysicalOperation(operator, source.getLayout(), source);
         }

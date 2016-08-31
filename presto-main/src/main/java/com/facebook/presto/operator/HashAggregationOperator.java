@@ -395,7 +395,9 @@ public class HashAggregationOperator
 	private Page getLucenePage2() {
     	
     	Page expectedPage = null;
-    	int entryNum = 10;
+    	
+		List<Pair<String, List<String>>> luceneResultList = newTestLuceneResult();
+    	int entryNum = luceneResultList.size();
     	List<Pair<Type, BlockBuilder>> type2Bb = new ArrayList<Pair<Type, BlockBuilder>>() ;
 
     	int typeIdx = 0;
@@ -410,10 +412,8 @@ public class HashAggregationOperator
     		BlockBuilder bb = getBlockbuilderFromType(type, entryNum);
     		type2Bb.add(new Pair<Type, BlockBuilder>(type, bb));
     	}
-    	
-
     		
-		List<Pair<String, List<String>>> luceneResultList = newTestLuceneResult();
+
 		
 		//1.write groupby value
 		Type groupByKeyType = type2Bb.get(0).cur;
@@ -498,7 +498,7 @@ public class HashAggregationOperator
     	return rlList;
     }
     
-    private BlockBuilder getBlockbuilderFromType(Type type, int entryNum) {
+    public  static BlockBuilder getBlockbuilderFromType(Type type, int entryNum) {
     	
     	if(type instanceof BigintType){
     		
