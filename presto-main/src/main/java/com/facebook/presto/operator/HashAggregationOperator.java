@@ -21,7 +21,9 @@ import com.facebook.presto.spi.block.BlockBuilder;
 import com.facebook.presto.spi.block.BlockBuilderStatus;
 import com.facebook.presto.spi.block.LongArrayBlockBuilder;
 import com.facebook.presto.spi.block.VariableWidthBlockBuilder;
+import com.facebook.presto.spi.type.BigintType;
 import com.facebook.presto.spi.type.Type;
+import com.facebook.presto.spi.type.VarcharType;
 import com.facebook.presto.sql.planner.plan.AggregationNode.Step;
 import com.facebook.presto.sql.planner.Symbol;
 import com.facebook.presto.sql.planner.plan.PlanNodeId;
@@ -29,6 +31,9 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
+//import com.sun.tools.javac.util.Pair;
+import com.facebook.presto.spi.type.DoubleType;
+
 import io.airlift.units.DataSize;
 import io.airlift.units.DataSize.Unit;
 import com.facebook.presto.spi.block.Block;
@@ -49,6 +54,7 @@ import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.queryparser.ext.Extensions.Pair;
 
 import static com.facebook.presto.operator.GroupByHash.createGroupByHash;
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
@@ -334,7 +340,7 @@ public class HashAggregationOperator
     	
 		if (step == Step.PARTIAL) {
 			
-			return getLucenePage();
+			return getLucenePage2();
 		} else {
 
 			return getPrestoPage();
@@ -384,32 +390,134 @@ public class HashAggregationOperator
         return types.build();
     }
     
-    //added by cubeli for luecne 
-    private Page getLucenePageWithMeta() throws Exception{
+    //added by cubeli for luecne  
+    @SuppressWarnings("null")
+	private Page getLucenePage2() {
     	
     	Page expectedPage = null;
-    	for(Entry<String, String> entry: accumulatTypeAndColumnNameMap.entrySet()){
+    	int entryNum = 10;
+    	List<Pair<Type, BlockBuilder>> type2Bb = new ArrayList<Pair<Type, BlockBuilder>>() ;
+
+    	int typeIdx = 0;
+    	for(Type type : types){
     		
-    		String accuType = entry.getKey();
-    		accuType = accuType.substring(0, 2);
-    		if(accuType.equals("sum")){
+    		if(typeIdx++ == 1){
     			
-    			//TODO
-    		}else if(accuType.equals("avg")){
-    			
-    			//TODO
-    		}else if(accuType.equals("count")){
-    			
-    			String groupByColumnName = groupByKeys.get(0).getName();
-    		}else{
-    			
-    			throw new Exception();
+    			BlockBuilder hashBb = BIGINT.createBlockBuilder(new BlockBuilderStatus(), entryNum);
+    			type2Bb.add(new Pair<Type, BlockBuilder>(BIGINT, hashBb));
+    			continue;
     		}
+    		BlockBuilder bb = getBlockbuilderFromType(type, entryNum);
+    		type2Bb.add(new Pair<Type, BlockBuilder>(type, bb));
     	}
     	
+
+    		
+		List<Pair<String, List<String>>> luceneResultList = newTestLuceneResult();
+		
+		//1.write groupby value
+		Type groupByKeyType = type2Bb.get(0).cur;
+		BlockBuilder groupByKeyBb = type2Bb.get(0).cud;
+		for(Pair<String, List<String>> pair : luceneResultList){
+			
+			if(groupByKeyType instanceof BigintType){
+				
+				long value = Long.parseLong(pair.cur);
+				BIGINT.writeLong(groupByKeyBb, value);
+			}else if(groupByKeyType instanceof VarcharType){
+				
+				String value = pair.cur; 
+				VARCHAR.writeString(groupByKeyBb, value);
+			}else if(groupByKeyType instanceof DoubleType){
+				
+				Double value = Double.parseDouble(pair.cur);
+				DOUBLE.writeDouble(groupByKeyBb, value);
+			}
+		}
+		
+		//2.write hash value
+		BlockBuilder hashBb = type2Bb.get(1).cud;
+		for(int i = 0; i < luceneResultList.size(); i++){
+			
+			BIGINT.writeLong(hashBb, i);
+		}
+		
+		//3.write other column
+		for(int i = 2; i < types.size(); i++){
+			
+			Type type = types.get(i);
+			BlockBuilder blockBuilder = type2Bb.get(i).cud;
+			for(Pair<String, List<String>> pair: luceneResultList){
+				
+				String accuValue = pair.cud.get(i-2);			
+				if(type instanceof BigintType){
+					
+					long value = Long.parseLong(accuValue);
+					BIGINT.writeLong(blockBuilder, value);
+				}else if(type instanceof VarcharType){
+					
+					String value = accuValue;
+					VARCHAR.writeString(blockBuilder, value);
+				}else if(type instanceof DoubleType){
+					
+					Double value = Double.parseDouble(accuValue);
+					DOUBLE.writeDouble(blockBuilder, value);
+				}					
+			}
+		}
+
+		BlockBuilder bb[] = new BlockBuilder[type2Bb.size()];
+		int idx = 0;
+		for(Pair<Type, BlockBuilder> pair : type2Bb){
+			
+			BlockBuilder blockBuilder = pair.cud;
+			bb[idx++] = blockBuilder;
+		}
+		expectedPage = new Page(bb);
+		
+		finishing = true;
     	return expectedPage;
     	
     }
+    
+    List<Pair<String, List<String>>> newTestLuceneResult(){
+    	
+    	List<Pair<String, List<String>>> rlList = new ArrayList<Pair<String, List<String>>>();
+    	
+    	List<String> l1 = new ArrayList<String>();
+    	l1.add("111");l1.add("111.1");l1.add("1111");
+    	
+    	List<String> l2 = new ArrayList<String>();
+    	l2.add("222");l2.add("222.2");l2.add("222.22");
+    	Pair<String, List<String>> p1 = new Pair<String, List<String>>("cubeli", l1);
+    	Pair<String, List<String>> p2 = new Pair<String, List<String>>("yangziying", l2);
+    	
+    	rlList.add(p1);
+    	rlList.add(p2);
+    	
+    	return rlList;
+    }
+    
+    private BlockBuilder getBlockbuilderFromType(Type type, int entryNum) {
+    	
+    	if(type instanceof BigintType){
+    		
+    		return BIGINT.createBlockBuilder(new BlockBuilderStatus(), entryNum);
+    	}else if(type instanceof VarcharType){
+    		
+    		return VARCHAR.createBlockBuilder(new BlockBuilderStatus(), entryNum);
+    	}else if(type instanceof DoubleType){
+			
+    		return DOUBLE.createBlockBuilder(new BlockBuilderStatus(), entryNum);
+		}
+    	else{
+    		
+    		return null;
+    	}
+    }
+    
+   
+    //for testing
 	private Page getLucenePage() {
 
 		Page expectedPage = null;
@@ -439,10 +547,15 @@ public class HashAggregationOperator
 		return expectedPage;
 	}
     
-    private Map<String, Long> getLuceneResult() throws IOException{
-    	
+	
+
+    private Map<String, List<String>> getLuceneResult() throws IOException{
+    		
     	IndexReader reader = null;
-    	Map<String,Long> returnMap = new HashMap<String, Long>();
+    	Map<String,List<String>> returnMap = new HashMap<String, List<String>>();
+    	
+    	String groupByColumnName = groupByKeys.get(0).getName();
+    	
 		try {
 			reader = DirectoryReader.open(FSDirectory.open(Paths.get("/home/liyong/workspace-neno/lucenetest/index")));
 		} catch (IOException e)
@@ -451,19 +564,22 @@ public class HashAggregationOperator
 		}
 		IndexSearcher searcher = new IndexSearcher(reader);
 		
-		Terms terms = MultiFields.getTerms(searcher.getIndexReader(), "orderpriority");
+		Terms terms = MultiFields.getTerms(searcher.getIndexReader(), groupByColumnName);
 		TermsEnum te = terms.iterator();
 		while(te.next() != null){
 			
+			List<String> l = new ArrayList<String>();
 			String name = te.term().utf8ToString();
 			int count = te.docFreq();
-			returnMap.put(name, Long.valueOf(count));
+			l.add(String.valueOf(count));
+			returnMap.put(name, l);
 		}
 		
 		return returnMap;
     }
     
     
+	//for testiing
     private Map<String, Long> getCountResult() throws IOException{
     	
     	IndexReader reader = null;

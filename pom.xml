@@ -106,18 +106,18 @@
         <module>presto-verifier</module>
         <module>presto-client</module>
         <module>presto-cli</module>
+        <module>presto-base-jdbc</module>
+        <module>presto-jdbc</module>
+        <module>presto-benchmark-driver</module>
+        <module>presto-plugin-toolkit</module>
 	-->
 
         <module>presto-tpch</module>
         <module>presto-record-decoder</module>
-        <module>presto-base-jdbc</module>
         <module>presto-bytecode</module>
         <module>presto-parser</module>
         <module>presto-main</module>
-        <module>presto-jdbc</module>
-        <module>presto-benchmark-driver</module>
         <module>presto-server</module>
-        <module>presto-plugin-toolkit</module>
     </modules>
 
     <dependencyManagement>
