@@ -318,8 +318,6 @@
 	        <artifactId>lucene-queryparser</artifactId>
 	    <version>6.1.0</version>
     	</dependency>
-<<<<<<< Updated upstream
-=======
 	<!--
 	<dependency>
 	    <groupId>com.sun</groupId>
@@ -329,7 +327,6 @@
 	    <systemPath>/home/liyong/software/java/jdk1.8.0_101/lib/tools.jar</systemPath>
 	</dependency>
 	-->
->>>>>>> Stashed changes
 
     </dependencies>
 
