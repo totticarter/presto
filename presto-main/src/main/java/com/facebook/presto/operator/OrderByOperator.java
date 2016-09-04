@@ -32,7 +32,6 @@ import com.sun.xml.internal.xsom.impl.scd.Iterators.Map;
 import java.util.List;
 
 import org.apache.lucene.queryparser.ext.Extensions.Pair;
-import org.jboss.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;

@@ -82,7 +82,7 @@ public class TestOrderByOperator
                 ImmutableList.of(1),
                 10,
                 ImmutableList.of(0),
-                ImmutableList.of(ASC_NULLS_LAST));
+                ImmutableList.of(ASC_NULLS_LAST),null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
@@ -115,7 +115,8 @@ public class TestOrderByOperator
                 ImmutableList.of(0, 1),
                 10,
                 ImmutableList.of(0, 1),
-                ImmutableList.of(ASC_NULLS_LAST, DESC_NULLS_LAST));
+                ImmutableList.of(ASC_NULLS_LAST, DESC_NULLS_LAST),
+null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
@@ -148,7 +149,8 @@ public class TestOrderByOperator
                 ImmutableList.of(0),
                 10,
                 ImmutableList.of(0),
-                ImmutableList.of(DESC_NULLS_LAST));
+                ImmutableList.of(DESC_NULLS_LAST),
+		null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
@@ -185,7 +187,8 @@ public class TestOrderByOperator
                 ImmutableList.of(1),
                 10,
                 ImmutableList.of(0),
-                ImmutableList.of(ASC_NULLS_LAST));
+                ImmutableList.of(ASC_NULLS_LAST),
+		null);
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
