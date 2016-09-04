@@ -32,6 +32,10 @@ import com.sun.xml.internal.xsom.impl.scd.Iterators.Map;
 import java.util.List;
 
 import org.apache.lucene.queryparser.ext.Extensions.Pair;
+<<<<<<< Updated upstream
+=======
+//import org.jboss.netty.handler.codec.serialization.ObjectEncoderOutputStream;
+>>>>>>> Stashed changes
 
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
@@ -240,13 +244,6 @@ public class OrderByOperator
 
     
     Page getLucenePage2(){
-    	
-    	
-//    	HashMap<String, Type> columnNameAndType = new HashMap<String, Type>();
-//    	for(int i = 0; i < types.size(); i++){
-//    		
-//    		columnNameAndType.put(outputs.get(i).getName(),  types.get(i));
-//    	}
     	
     	
     	

@@ -12,7 +12,6 @@
  * limitations under the License.
  */
 package com.facebook.presto.operator;
-
 import com.facebook.presto.operator.aggregation.AccumulatorFactory;
 import com.facebook.presto.operator.aggregation.GroupedAccumulator;
 import com.facebook.presto.spi.Page;
@@ -25,12 +24,15 @@ import com.facebook.presto.spi.type.BigintType;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.VarcharType;
 import com.facebook.presto.sql.planner.plan.AggregationNode.Step;
+import com.facebook.presto.util.Types;
 import com.facebook.presto.sql.planner.Symbol;
 import com.facebook.presto.sql.planner.plan.PlanNodeId;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
+
+
 //import com.sun.tools.javac.util.Pair;
 import com.facebook.presto.spi.type.DoubleType;
 
@@ -233,6 +235,8 @@ public class HashAggregationOperator
         this.groupByKeys = groupByKeys;
         
     }
+    
+    
 
     @Override
     public OperatorContext getOperatorContext()
@@ -390,13 +394,120 @@ public class HashAggregationOperator
         return types.build();
     }
     
+
+
+    
+    private  List<Pair<String, String>> getGroupByInfos(Map<Symbol, Integer> outputMappings, Map<String, String> accumulatTypeAndColumnNameMap, List<Symbol> groupByKeys){
+    	
+    	List<Pair<String, String>> returnList = new ArrayList<Pair<String, String>>();
+    	
+    	
+    	for(int i = 0; i < groupByKeys.size(); i++){
+    		
+    		Pair<String, String> pair = new Pair<String, String>(groupByKeys.get(i).getName(), types.get(i).getTypeSignature().getBase());
+    		returnList.add(pair);
+    	}
+    	
+    	return returnList;
+    }
+    
     //added by cubeli for luecne  
+    /*
+     * this method is designed for multi-groupby
+     * and it process the hash block as an normal block
+     */
+    private Page getLucenePage3(){
+    	
+       	List<List<String>> luceneOrderResult = newTestLuceneResult3();//should be replaced by getLuceneResult3()
+    	int entryNum = luceneOrderResult.size();
+    	
+    	List<Pair<Type, BlockBuilder>> type2Bb = new ArrayList<Pair<Type, BlockBuilder>>();
+    	for(Type type : types){
+    		
+    		BlockBuilder bb = HashAggregationOperator.getBlockbuilderFromType(type, entryNum);
+    		type2Bb.add(new Pair<Type, BlockBuilder>(type, bb));
+    	}
+    	
+    	int groupByKeySize = groupByKeys.size();
+    	
+
+    	for(int i = 0; i < types.size(); i++){
+    		
+    		
+    		if(i == groupByKeySize){
+    			
+    			//TODO build this hash block ??
+    		}
+    		Type type = types.get(i);
+			BlockBuilder blockBuilder = type2Bb.get(i).cud;
+			for(List<String> line: luceneOrderResult){
+				
+				String accuValue = line.get(i);			
+				if(type instanceof BigintType){
+					
+					long value = Long.parseLong(accuValue);
+					BIGINT.writeLong(blockBuilder, value);
+				}else if(type instanceof VarcharType){
+					
+					String value = accuValue;
+					VARCHAR.writeString(blockBuilder, value);
+				}else if(type instanceof DoubleType){
+					
+					Double value = Double.parseDouble(accuValue);
+					DOUBLE.writeDouble(blockBuilder, value);
+				}					
+			}
+    	}
+    	
+		BlockBuilder bb[] = new BlockBuilder[type2Bb.size()];
+		int idx = 0;
+		for(Pair<Type, BlockBuilder> pair : type2Bb){
+			
+			BlockBuilder blockBuilder = pair.cud;
+			bb[idx++] = blockBuilder;
+		}
+		Page expectedPage = new Page(bb);
+		finishing = true;
+    	return expectedPage;
+    }
+    
+    
+    
+    List<List<String>> newTestLuceneResult3(){
+    	
+    	List<List<String>> rlList = new ArrayList<List<String>>();
+    	List<String> l1 = new ArrayList<String>();
+    	l1.add("one");l1.add("111");
+    	
+    	List<String> l2 = new ArrayList<String>();
+    	l2.add("two");l2.add("222");
+    	
+    	List<String> l3 = new ArrayList<String>();
+    	l3.add("three");l3.add("333");
+    	
+    	rlList.add(l1); rlList.add(l2); rlList.add(l3);
+
+    	
+    	return rlList;
+    }
+    
+    List<List<String>> getLuceneResult3(){
+    	
+    	//groupby fields infos can be got from getGroupByInfos method
+    	//return fields and accu types can be got from accumulatTypeAndColumnNameMap
+    	return null;
+    }
+    
     @SuppressWarnings("null")
+    /*
+     * this method are designed for one group by key
+     * and it has special processing for hash block
+     */
 	private Page getLucenePage2() {
     	
     	Page expectedPage = null;
     	
-		List<Pair<String, List<String>>> luceneResultList = newTestLuceneResult();
+		List<Pair<String, List<String>>> luceneResultList = newTestLuceneResult2();
     	int entryNum = luceneResultList.size();
     	List<Pair<Type, BlockBuilder>> type2Bb = new ArrayList<Pair<Type, BlockBuilder>>() ;
 
@@ -480,7 +591,7 @@ public class HashAggregationOperator
     	
     }
     
-    List<Pair<String, List<String>>> newTestLuceneResult(){
+    List<Pair<String, List<String>>> newTestLuceneResult2(){
     	
     	List<Pair<String, List<String>>> rlList = new ArrayList<Pair<String, List<String>>>();
     	

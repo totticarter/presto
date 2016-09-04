@@ -1007,7 +1007,7 @@ public class LocalExecutionPlanner
                     .map(expression -> toRowExpression(expression, expressionTypes))
                     .collect(toImmutableList());
 
-            try {
+           /* try {
                 if (columns != null) {
                     Supplier<CursorProcessor> cursorProcessor = compiler.compileCursorProcessor(translatedFilter, translatedProjections, sourceNode.getId());
                     Supplier<PageProcessor> pageProcessor = compiler.compilePageProcessor(translatedFilter, translatedProjections);
@@ -1043,7 +1043,7 @@ public class LocalExecutionPlanner
 
                 // compilation failed, use interpreter
                 log.error(e, "Compile failed for filter=%s projections=%s sourceTypes=%s error=%s", filterExpression, projectionExpressions, sourceTypes, e);
-            }
+            }*/
 
             FilterFunction filterFunction;
             if (filterExpression != BooleanLiteral.TRUE_LITERAL) {

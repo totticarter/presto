@@ -82,7 +82,12 @@ public class TestOrderByOperator
                 ImmutableList.of(1),
                 10,
                 ImmutableList.of(0),
+<<<<<<< Updated upstream
                 ImmutableList.of(ASC_NULLS_LAST),null);
+=======
+                ImmutableList.of(ASC_NULLS_LAST),
+                null);
+>>>>>>> Stashed changes
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
@@ -116,7 +121,11 @@ public class TestOrderByOperator
                 10,
                 ImmutableList.of(0, 1),
                 ImmutableList.of(ASC_NULLS_LAST, DESC_NULLS_LAST),
+<<<<<<< Updated upstream
 null);
+=======
+                null);
+>>>>>>> Stashed changes
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
@@ -150,7 +159,11 @@ null);
                 10,
                 ImmutableList.of(0),
                 ImmutableList.of(DESC_NULLS_LAST),
+<<<<<<< Updated upstream
 		null);
+=======
+                null);
+>>>>>>> Stashed changes
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
@@ -188,7 +201,11 @@ null);
                 10,
                 ImmutableList.of(0),
                 ImmutableList.of(ASC_NULLS_LAST),
+<<<<<<< Updated upstream
 		null);
+=======
+                null);
+>>>>>>> Stashed changes
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
