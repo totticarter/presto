@@ -100,15 +100,15 @@
         <module>presto-hive-cdh4</module>
         <module>presto-hive-cdh5</module>
         <module>presto-lucene</module>
-        <module>presto-teradata-functions</module>
         <module>presto-benchmark</module>
+        <module>presto-benchmark-driver</module>
+        <module>presto-teradata-functions</module>
         <module>presto-product-tests</module>
         <module>presto-verifier</module>
         <module>presto-client</module>
         <module>presto-cli</module>
         <module>presto-base-jdbc</module>
         <module>presto-jdbc</module>
-        <module>presto-benchmark-driver</module>
         <module>presto-plugin-toolkit</module>
 	-->
 

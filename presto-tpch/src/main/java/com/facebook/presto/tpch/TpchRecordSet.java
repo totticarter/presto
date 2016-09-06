@@ -124,13 +124,13 @@ public class TpchRecordSet<E extends TpchEntity>
             }
             
             //mod by cubeli
-//            closed = true;
-//            row = null;
-//            return false;
+            closed = true;
+            row = null;
+            return false;
             //mod by cubeli
             
-            row = rows.next();
-            return true;
+//            row = rows.next();
+//            return true;
         }
 
         @Override

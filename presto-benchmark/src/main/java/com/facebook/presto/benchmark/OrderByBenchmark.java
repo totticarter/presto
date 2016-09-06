@@ -49,7 +49,7 @@ public class OrderByBenchmark
                 ImmutableList.of(1),
                 ROWS,
                 ImmutableList.of(0),
-                ImmutableList.of(ASC_NULLS_LAST));
+                ImmutableList.of(ASC_NULLS_LAST),null);
 
         return ImmutableList.of(tableScanOperator, limitOperator, orderByOperator);
     }

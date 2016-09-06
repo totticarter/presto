@@ -649,6 +649,7 @@ public class TaskExecutor
                             // priority level changed, return split to queue for re-prioritization
                             pendingSplits.put(split);
                             continue;
+                            
                         }
                     }
                     catch (InterruptedException e) {

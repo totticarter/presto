@@ -62,6 +62,9 @@ public class TpchSplitManager
             for (int i = 0; i < splitsPerNode; i++) {
                 splits.add(new TpchSplit(tableHandle, partNumber, totalParts, ImmutableList.of(node.getHostAndPort())));
                 partNumber++;
+                
+                //added by cubeli
+                break;
             }
         }
         return new FixedSplitSource(splits.build());

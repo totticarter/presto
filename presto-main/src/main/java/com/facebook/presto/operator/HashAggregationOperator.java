@@ -294,11 +294,11 @@ public class HashAggregationOperator
         * if invoke processPage(page) every time, the partial accumulation result will be
         * accumulated, and the incorrect result will be got in the final accumulation
         */
-        if(!readLucene){
-        
-        	readLucene = true;
+//        if(!readLucene){
+//        
+//        	readLucene = true;
         	aggregationBuilder.processPage(page);        	
-        }
+//        }
 
     }
 
@@ -600,11 +600,19 @@ public class HashAggregationOperator
     	
     	List<String> l2 = new ArrayList<String>();
     	l2.add("222");l2.add("222.2");l2.add("222.22");
+    
+    	List<String> l3 = new ArrayList<String>();
+    	l3.add("333");l3.add("333.3");l1.add("3333");
+    	
+       
+    	
     	Pair<String, List<String>> p1 = new Pair<String, List<String>>("cubeli", l1);
     	Pair<String, List<String>> p2 = new Pair<String, List<String>>("yangziying", l2);
+    	Pair<String, List<String>> p3 = new Pair<String, List<String>>("litairen", l3);
     	
     	rlList.add(p1);
     	rlList.add(p2);
+    	rlList.add(p3);
     	
     	return rlList;
     }

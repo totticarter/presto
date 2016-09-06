@@ -362,9 +362,9 @@ public class Driver
             for (int i = 0; i < operators.size() - 1 && !driverContext.isDone(); i++) {
                 Operator current = operators.get(i);
                 
-//                if(current instanceof ScanFilterAndProjectOperator){
-//                	continue;
-//                }
+                if(current instanceof ScanFilterAndProjectOperator){
+                	continue;
+                }
                 Operator next = operators.get(i + 1);
 
                 // skip blocked operators
