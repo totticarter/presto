@@ -85,6 +85,7 @@ public class TestOrderByOperator
                 ImmutableList.of(ASC_NULLS_LAST),
                 null);
 
+
         Operator operator = operatorFactory.createOperator(driverContext);
 
         MaterializedResult expected = resultBuilder(driverContext.getSession(), DOUBLE)
@@ -153,6 +154,7 @@ public class TestOrderByOperator
                 ImmutableList.of(DESC_NULLS_LAST),
                 null);
 
+
         Operator operator = operatorFactory.createOperator(driverContext);
 
         MaterializedResult expected = resultBuilder(driverContext.getSession(), BIGINT)
@@ -190,6 +192,7 @@ public class TestOrderByOperator
                 ImmutableList.of(0),
                 ImmutableList.of(ASC_NULLS_LAST),
                 null);
+
 
         Operator operator = operatorFactory.createOperator(driverContext);
 
