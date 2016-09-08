@@ -15,6 +15,7 @@ package com.facebook.presto.metadata;
 
 import com.facebook.presto.spi.ConnectorTableLayoutHandle;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
+import com.facebook.presto.sql.tree.Expression;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -27,6 +28,7 @@ public final class TableLayoutHandle
     private final String connectorId;
     private final ConnectorTransactionHandle transactionHandle;
     private final ConnectorTableLayoutHandle layout;
+    private Expression originalConstraint;
 
     @JsonCreator
     public TableLayoutHandle(
@@ -43,6 +45,13 @@ public final class TableLayoutHandle
         this.layout = layout;
     }
 
+    //added by cubeli for get partition info from sql
+    
+    public void setPredicate(Expression e){
+    	
+    	originalConstraint = e;
+    }
+    
     @JsonProperty
     public String getConnectorId()
     {

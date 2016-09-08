@@ -13,14 +13,26 @@
  */
 package com.facebook.presto.tpch;
 
+import java.util.List;
+
 import com.facebook.presto.spi.ConnectorTableLayoutHandle;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+//import com.facebook.presto.sql.tree.Expression;
 
 public class TpchTableLayoutHandle
         implements ConnectorTableLayoutHandle
 {
     private final TpchTableHandle table;
+    
+    //added by cubeli
+    //正常情况下Expression不应该下沉到插件内部，所以这里暂时无法把expression传递下来。
+//    private Expression e;
+    private List<String> indexPaths;
+    public void setIndexPaths(List<String> indexPaths){
+    	
+    	this.indexPaths = indexPaths; 
+    }
 
     @JsonCreator
     public TpchTableLayoutHandle(@JsonProperty("table") TpchTableHandle table)

@@ -74,10 +74,10 @@
     <modules>
         <module>presto-spi</module>
         <module>presto-array</module>
+        <module>presto-jmx</module>
 
 	<!--
         <module>presto-atop</module>
-        <module>presto-jmx</module>
         <module>presto-redis</module>
         <module>presto-cassandra</module>
         <module>presto-blackhole</module>

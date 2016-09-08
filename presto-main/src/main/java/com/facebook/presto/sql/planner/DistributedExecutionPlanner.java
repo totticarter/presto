@@ -108,7 +108,10 @@ public class DistributedExecutionPlanner
         @Override
         public Map<PlanNodeId, SplitSource> visitTableScan(TableScanNode node, Void context)
         {
-            // get dataSource for table
+        	//added by cubeli
+        	node.getLayout().get().setPredicate(node.getOriginalConstraint());
+        	
+        	// get dataSource for table
             SplitSource splitSource = splitManager.getSplits(session, node.getLayout().get());
 
             return ImmutableMap.of(node.getId(), splitSource);
