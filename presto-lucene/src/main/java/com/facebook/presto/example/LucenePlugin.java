@@ -15,6 +15,7 @@ package com.facebook.presto.example;
 
 import com.facebook.presto.spi.Plugin;
 import com.facebook.presto.spi.connector.ConnectorFactory;
+import com.facebook.presto.spi.connector.ConnectorFactoryContext;
 import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,12 +50,18 @@ public class LucenePlugin
         return optionalConfig;
     }
 
+//    @Override
+//    public synchronized <T> List<T> getServices(Class<T> type)
+//    {
+//        if (type == ConnectorFactory.class) {
+//            return ImmutableList.of(type.cast(new LuceneConnectorFactory(typeManager, getOptionalConfig())));
+//        }
+//        return ImmutableList.of();
+//    }
     @Override
-    public synchronized <T> List<T> getServices(Class<T> type)
+    public Iterable<ConnectorFactory> getConnectorFactories(ConnectorFactoryContext context)
     {
-        if (type == ConnectorFactory.class) {
-            return ImmutableList.of(type.cast(new LuceneConnectorFactory(typeManager, getOptionalConfig())));
-        }
-        return ImmutableList.of();
+        return ImmutableList.of(new LuceneConnectorFactory(context.getTypeManager(), optionalConfig));
     }
+    
 }

@@ -74,14 +74,15 @@
     <modules>
         <module>presto-spi</module>
         <module>presto-array</module>
-        <module>presto-jmx</module>
+        <module>presto-lucene</module>
 
 	<!--
         <module>presto-atop</module>
+        <module>presto-example-http</module>
+        <module>presto-jmx</module>
         <module>presto-redis</module>
         <module>presto-cassandra</module>
         <module>presto-blackhole</module>
-        <module>presto-example-http</module>
         <module>presto-local-file</module>
         <module>presto-raptor</module>
         <module>presto-mysql</module>
@@ -99,7 +100,6 @@
         <module>presto-hive-hadoop2</module>
         <module>presto-hive-cdh4</module>
         <module>presto-hive-cdh5</module>
-        <module>presto-lucene</module>
         <module>presto-benchmark</module>
         <module>presto-benchmark-driver</module>
         <module>presto-teradata-functions</module>
