@@ -545,7 +545,8 @@ public class LocalQueryRunner
         for (TableScanNode tableScan : findTableScanNodes(subplan.getFragment().getRoot())) {
             TableLayoutHandle layout = tableScan.getLayout().get();
 
-            SplitSource splitSource = splitManager.getSplits(session, layout);
+            //modified by cubeli, added the predicate
+            SplitSource splitSource = splitManager.getSplits(session, layout, tableScan.getOriginalConstraint());
 
             ImmutableSet.Builder<ScheduledSplit> scheduledSplits = ImmutableSet.builder();
             while (!splitSource.isFinished()) {
@@ -713,7 +714,8 @@ public class LocalQueryRunner
 
     private Split getLocalQuerySplit(Session session, TableLayoutHandle handle)
     {
-        SplitSource splitSource = splitManager.getSplits(session, handle);
+    	//modified by cubeli,add the predicate
+        SplitSource splitSource = splitManager.getSplits(session, handle, null);
         List<Split> splits = new ArrayList<>();
         splits.addAll(getFutureValue(splitSource.getNextBatch(1000)));
         while (!splitSource.isFinished()) {

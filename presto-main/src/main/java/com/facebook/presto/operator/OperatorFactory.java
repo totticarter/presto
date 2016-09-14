@@ -24,6 +24,8 @@ public interface OperatorFactory
     List<Type> getTypes();
 
     Operator createOperator(DriverContext driverContext);
+//    Operator createOperator(DriverContext driverContext, boolean isShow);
+
 
     @Override
     void close();

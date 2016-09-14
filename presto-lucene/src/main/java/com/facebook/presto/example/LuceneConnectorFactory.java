@@ -97,8 +97,8 @@ public class LuceneConnectorFactory
             @Override
             public ConnectorTransactionHandle beginTransaction(IsolationLevel isolationLevel, boolean readOnly)
             {
-//                return TpchTransactionHandle.INSTANCE;
-            	return null;
+                return LuceneTransactionHandle.INSTANCE;
+//            	return null;
             }
 
             @Override

@@ -70,9 +70,9 @@ public class LuceneSplitManager
     {
         LuceneTableLayoutHandle layoutHandle = checkType(layout, LuceneTableLayoutHandle.class, "layout");
         LuceneTableHandle tableHandle = layoutHandle.getTable();
-        LuceneTable table = exampleClient.getTable(tableHandle.getSchemaName(), tableHandle.getTableName());
-        // this can happen if table is removed during a query
-        checkState(table != null, "Table %s.%s no longer exists", tableHandle.getSchemaName(), tableHandle.getTableName());
+//        LuceneTable table = exampleClient.getTable(tableHandle.getSchemaName(), tableHandle.getTableName());
+//        // this can happen if table is removed during a query
+//        checkState(table != null, "Table %s.%s no longer exists", tableHandle.getSchemaName(), tableHandle.getTableName());
 
 //        List<ConnectorSplit> splits = new ArrayList<>();
 //        for (URI uri : table.getSources()) {

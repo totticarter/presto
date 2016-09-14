@@ -11,24 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.facebook.presto.execution;
 
-import io.airlift.json.JsonCodec;
-import org.testng.annotations.Test;
+package com.facebook.presto.example;
 
-import static org.testng.Assert.assertEquals;
+import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 
-public class TestColumn
+public enum LuceneTransactionHandle
+        implements ConnectorTransactionHandle
 {
-    private static final JsonCodec<Column> codec = JsonCodec.jsonCodec(Column.class);
-
-    @Test
-    public void testRoundTrip()
-    {
-        Column expected = new Column("name", "type");
-        String json = codec.toJson(expected);
-        Column actual = codec.fromJson(json);
-
-        assertEquals(actual, expected);
-    }
+    INSTANCE
 }

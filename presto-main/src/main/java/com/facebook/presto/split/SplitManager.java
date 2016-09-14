@@ -19,6 +19,7 @@ import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorSplitSource;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 //import com.facebook.presto.tpch.TpchTableLayoutHandle;
+import com.facebook.presto.sql.tree.Expression;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -35,7 +36,7 @@ public class SplitManager
         checkState(splitManagers.putIfAbsent(connectorId, connectorSplitManager) == null, "SplitManager for connector '%s' is already registered", connectorId);
     }
 
-    public SplitSource getSplits(Session session, TableLayoutHandle layout)
+    public SplitSource getSplits(Session session, TableLayoutHandle layout, Expression predicate)
     {
 //    	//added by cubeli start
 //    	if(layout.getConnectorHandle() instanceof TpchTableLayoutHandle){
@@ -44,6 +45,7 @@ public class SplitManager
 //    		tpchTableLayoutHandle.setIndexPaths(null);
 //    	}
 //    	//added by cubeli end
+    	layout.setPredicate(predicate);
     	
         String connectorId = layout.getConnectorId();
         ConnectorSplitManager splitManager = getConnectorSplitManager(connectorId);

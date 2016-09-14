@@ -50,6 +50,6 @@ public class LuceneHandleResolver
     @Override
     public Class<? extends ConnectorTransactionHandle> getTransactionHandleClass()
     {
-        return ExampleTransactionHandle.class;
+        return LuceneTransactionHandle.class;
     }
 }

@@ -112,7 +112,7 @@ public class DistributedExecutionPlanner
         	node.getLayout().get().setPredicate(node.getOriginalConstraint());
         	
         	// get dataSource for table
-            SplitSource splitSource = splitManager.getSplits(session, node.getLayout().get());
+            SplitSource splitSource = splitManager.getSplits(session, node.getLayout().get(), node.getOriginalConstraint());
 
             return ImmutableMap.of(node.getId(), splitSource);
         }

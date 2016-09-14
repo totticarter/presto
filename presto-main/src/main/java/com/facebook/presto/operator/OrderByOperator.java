@@ -60,6 +60,7 @@ public class OrderByOperator
         
         //added by cubeli for lucene
         private List<Symbol> outputs;
+        private boolean isShow;
 
         public OrderByOperatorFactory(
                 int operatorId,
@@ -69,7 +70,8 @@ public class OrderByOperator
                 int expectedPositions,
                 List<Integer> sortChannels,
                 List<SortOrder> sortOrder,
-                List<Symbol> outputs)
+                List<Symbol> outputs,
+                boolean isShow)
         {
             this.operatorId = operatorId;
             this.planNodeId = requireNonNull(planNodeId, "planNodeId is null");
@@ -81,6 +83,7 @@ public class OrderByOperator
 
             this.types = toTypes(sourceTypes, outputChannels);
             this.outputs = outputs;
+            this.isShow = isShow;
         }
 
         @Override
@@ -102,7 +105,8 @@ public class OrderByOperator
                     expectedPositions,
                     sortChannels,
                     sortOrder,
-                    outputs);
+                    outputs,
+                    isShow);
         }
 
         @Override
@@ -114,7 +118,7 @@ public class OrderByOperator
         @Override
         public OperatorFactory duplicate()
         {
-            return new OrderByOperatorFactory(operatorId, planNodeId, sourceTypes, outputChannels, expectedPositions, sortChannels, sortOrder,outputs);
+            return new OrderByOperatorFactory(operatorId, planNodeId, sourceTypes, outputChannels, expectedPositions, sortChannels, sortOrder,outputs, isShow);
         }
     }
 
@@ -140,6 +144,8 @@ public class OrderByOperator
     
     //added by cubeli for lucene
     private List<Symbol> outputs;
+    private boolean isShow;
+	private boolean isLucene = true;
 
     public OrderByOperator(
             OperatorContext operatorContext,
@@ -148,7 +154,8 @@ public class OrderByOperator
             int expectedPositions,
             List<Integer> sortChannels,
             List<SortOrder> sortOrder,
-            List<Symbol> outputs)
+            List<Symbol> outputs,
+            boolean isShow)
     {
         this.operatorContext = requireNonNull(operatorContext, "operatorContext is null");
         this.outputChannels = Ints.toArray(requireNonNull(outputChannels, "outputChannels is null"));
@@ -160,6 +167,8 @@ public class OrderByOperator
 
         this.pageBuilder = new PageBuilder(this.types);
         this.outputs = outputs;
+        
+        this.isShow = isShow;
     }
 
     @Override
@@ -210,7 +219,19 @@ public class OrderByOperator
     @Override
     public Page getOutput()
     {
- /*       if (state != State.HAS_OUTPUT) {
+    	if(!isShow){
+    		
+    		return getLucenePage2();
+    	}else{
+    		
+    		return getPage();
+    	}
+    	
+    }
+
+    Page getPage(){
+    	
+    	if (state != State.HAS_OUTPUT) {
             return null;
         }
 
@@ -230,19 +251,11 @@ public class OrderByOperator
         }
 
         Page page = pageBuilder.build();
-        return page;*/
-    	
-//    	return newLucenePage();
-    	
-    	return getLucenePage2();
-    	
+        return page;
     }
-
     
     Page getLucenePage2(){
-    	
-    	
-    	
+    		
     	List<List<String>> luceneOrderResult = newTestLuceneResult();
     	int entryNum = luceneOrderResult.size();
     	
@@ -350,4 +363,10 @@ public class OrderByOperator
         }
         return types.build();
     }
+
+	public void setOutputType(boolean isLucene) {
+		// TODO Auto-generated method stub
+		this.isLucene = isLucene;
+		
+	}
 }

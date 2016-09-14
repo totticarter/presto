@@ -362,9 +362,19 @@ public class Driver
             for (int i = 0; i < operators.size() - 1 && !driverContext.isDone(); i++) {
                 Operator current = operators.get(i);
                 
+                //added by cubeli for we do not need to scan-filter-project the source table
                 if(current instanceof ScanFilterAndProjectOperator){
-                	continue;
-                }
+                	
+                	/*
+                	 * 1.show schemas,调用的是TableScanOperator，因为没有特殊处理，所以可以正常显示
+                	 * 	 show tables,调用的是ScanFilterAndProjectOperator，因为有特殊处理，所以有两种情况：
+                	 *   1.1 如果调用finish方法，没有数据源输入，则show操作没有结果
+                	 *   1.2 如果调用continue方法，则show操作不会停止，因为会一直循环
+                	 */
+//                	current.finish();
+//                	continue;
+                }           
+                
                 Operator next = operators.get(i + 1);
 
                 // skip blocked operators

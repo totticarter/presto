@@ -24,7 +24,7 @@ import io.airlift.log.Logger;
 
 import javax.inject.Inject;
 
-import static com.facebook.presto.example.ExampleTransactionHandle.INSTANCE;
+import static com.facebook.presto.example.LuceneTransactionHandle.INSTANCE;
 import static java.util.Objects.requireNonNull;
 
 public class LuceneConnector

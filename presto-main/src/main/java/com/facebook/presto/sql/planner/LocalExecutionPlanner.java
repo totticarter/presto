@@ -765,6 +765,7 @@ public class LocalExecutionPlanner
             PhysicalOperation source = node.getSource().accept(this, context);
 
             List<Symbol> orderBySymbols = node.getOrderBy();
+            boolean isShow = (orderBySymbols.get(0).getName().equals("table_name") || orderBySymbols.get(0).getName().equals("schema_name")) ? true : false;
 
             List<Integer> orderByChannels = getChannelsForSymbols(orderBySymbols, source.getLayout());
 
@@ -786,7 +787,8 @@ public class LocalExecutionPlanner
                     10_000,
                     orderByChannels,
                     sortOrder.build(),
-                    node.getSource().getOutputSymbols());
+                    node.getSource().getOutputSymbols(),
+                    isShow);
 
             return new PhysicalOperation(operator, source.getLayout(), source);
         }

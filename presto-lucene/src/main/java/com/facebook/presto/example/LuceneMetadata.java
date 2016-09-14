@@ -55,7 +55,7 @@ public class LuceneMetadata
 {
     private final String connectorId;
 
-    private final LuceneClient luceneClient;
+//    private final LuceneClient luceneClient;
     
     private final Map<String, Map<String, LuceneTable>> schemas;
 
@@ -63,7 +63,7 @@ public class LuceneMetadata
     public LuceneMetadata(LuceneConnectorId connectorId, LuceneClient exampleClient)
     {
         this.connectorId = requireNonNull(connectorId, "connectorId is null").toString();
-        this.luceneClient = requireNonNull(exampleClient, "client is null");
+//        this.luceneClient = requireNonNull(exampleClient, "client is null");
         this.schemas = getSchemasFromHdfs();
     }
 
