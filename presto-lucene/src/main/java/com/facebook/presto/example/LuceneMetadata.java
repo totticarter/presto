@@ -26,6 +26,7 @@ import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.SchemaTablePrefix;
 import com.facebook.presto.spi.TableNotFoundException;
 import com.facebook.presto.spi.connector.ConnectorMetadata;
+import com.facebook.presto.spi.type.BigintType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -41,21 +42,51 @@ import static com.facebook.presto.example.Types.checkType;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
+//added by cubeli
+import static com.facebook.presto.spi.type.BigintType.BIGINT;
+import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
+import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
+
 public class LuceneMetadata
         implements ConnectorMetadata
 {
     private final String connectorId;
 
     private final LuceneClient luceneClient;
+    
+    private final Map<String, Map<String, LuceneTable>> schemas;
 
-    @Inject
+//    @Inject
     public LuceneMetadata(LuceneConnectorId connectorId, LuceneClient exampleClient)
     {
         this.connectorId = requireNonNull(connectorId, "connectorId is null").toString();
         this.luceneClient = requireNonNull(exampleClient, "client is null");
+        this.schemas = getSchemasFromHdfs();
     }
 
-    @Override
+    private Map<String, Map<String, LuceneTable>> getSchemasFromHdfs() {
+		
+    	List<LuceneColumn> columns = new ArrayList<LuceneColumn>();
+    	LuceneColumn lc1 = new LuceneColumn("custkey", BIGINT); columns.add(lc1);
+    	LuceneColumn lc2 = new LuceneColumn("orderkey", BIGINT); columns.add(lc2);
+    	LuceneColumn lc3 = new LuceneColumn("orderpriority", VARCHAR); columns.add(lc3);
+    	LuceneColumn lc4 = new LuceneColumn("totalprice", DOUBLE); columns.add(lc4);
+    	
+    	LuceneTable lt = new LuceneTable("orders", columns);
+    	
+    	Map<String, LuceneTable> t1 = new HashMap<>();
+    	t1.put("orders", lt);
+    	
+    	Map<String, Map<String, LuceneTable>> s1 = new HashMap<>();
+    	s1.put("sf1", t1);
+    	
+		return s1;
+	}
+
+	@Override
     public List<String> listSchemaNames(ConnectorSession session)
     {
         return listSchemaNames();
@@ -63,7 +94,8 @@ public class LuceneMetadata
 
     public List<String> listSchemaNames()
     {
-        return ImmutableList.copyOf(luceneClient.getSchemaNames());
+//        return ImmutableList.copyOf(luceneClient.getSchemaNames());
+    	return new ArrayList<>(schemas.keySet());
     }
 
     @Override
@@ -73,7 +105,8 @@ public class LuceneMetadata
             return null;
         }
 
-        LuceneTable table = luceneClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+//        LuceneTable table = luceneClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+        LuceneTable table = getTableHandle(tableName.getSchemaName(), tableName.getTableName());
         if (table == null) {
             return null;
         }
@@ -81,7 +114,12 @@ public class LuceneMetadata
         return new LuceneTableHandle(connectorId, tableName.getSchemaName(), tableName.getTableName());
     }
 
-    @Override
+    private LuceneTable getTableHandle(String schemaName, String tableName) {
+		
+    	return schemas.get(schemaName).get(tableName);
+	}
+
+	@Override
     public List<ConnectorTableLayoutResult> getTableLayouts(ConnectorSession session, ConnectorTableHandle table, Constraint<ColumnHandle> constraint, Optional<Set<ColumnHandle>> desiredColumns)
     {
         LuceneTableHandle tableHandle = checkType(table, LuceneTableHandle.class, "table");
@@ -113,12 +151,14 @@ public class LuceneMetadata
             schemaNames = ImmutableSet.of(schemaNameOrNull);
         }
         else {
-            schemaNames = luceneClient.getSchemaNames();
+//            schemaNames = luceneClient.getSchemaNames();
+        	schemaNames = schemas.keySet();
         }
 
         ImmutableList.Builder<SchemaTableName> builder = ImmutableList.builder();
         for (String schemaName : schemaNames) {
-            for (String tableName : luceneClient.getTableNames(schemaName)) {
+//            for (String tableName : luceneClient.getTableNames(schemaName)) {
+        	for(String tableName: schemas.get(schemaName).keySet()){
                 builder.add(new SchemaTableName(schemaName, tableName));
             }
         }
@@ -131,7 +171,8 @@ public class LuceneMetadata
         LuceneTableHandle exampleTableHandle = checkType(tableHandle, LuceneTableHandle.class, "tableHandle");
         checkArgument(exampleTableHandle.getConnectorId().equals(connectorId), "tableHandle is not for this connector");
 
-        LuceneTable table = luceneClient.getTable(exampleTableHandle.getSchemaName(), exampleTableHandle.getTableName());
+//        LuceneTable table = luceneClient.getTable(exampleTableHandle.getSchemaName(), exampleTableHandle.getTableName());
+        LuceneTable table = schemas.get(exampleTableHandle.getSchemaName()).get(exampleTableHandle.getTableName());
         if (table == null) {
             throw new TableNotFoundException(exampleTableHandle.toSchemaTableName());
         }
@@ -166,7 +207,8 @@ public class LuceneMetadata
             return null;
         }
 
-        LuceneTable table = luceneClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+//        LuceneTable table = luceneClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+        LuceneTable table = schemas.get(tableName.getSchemaName()).get(tableName.getTableName());
         if (table == null) {
             return null;
         }

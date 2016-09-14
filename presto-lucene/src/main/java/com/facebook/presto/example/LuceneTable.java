@@ -49,6 +49,22 @@ public class LuceneTable
         }
         this.columnsMetadata = columnsMetadata.build();
     }
+    
+    public LuceneTable(
+            String name,
+            List<LuceneColumn> columns)
+    {
+        checkArgument(!isNullOrEmpty(name), "name is null or is empty");
+        this.name = requireNonNull(name, "name is null");
+        this.columns = ImmutableList.copyOf(requireNonNull(columns, "columns is null"));
+        this.sources = null;
+
+        ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
+        for (LuceneColumn column : this.columns) {
+            columnsMetadata.add(new ColumnMetadata(column.getName(), column.getType()));
+        }
+        this.columnsMetadata = columnsMetadata.build();
+    }
 
     @JsonProperty
     public String getName()

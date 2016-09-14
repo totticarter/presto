@@ -45,7 +45,7 @@ public class LuceneClient
      */
     private final Supplier<Map<String, Map<String, LuceneTable>>> schemas;
 
-    @Inject
+//    @Inject
     public LuceneClient(LuceneConfig config, JsonCodec<Map<String, List<LuceneTable>>> catalogCodec)
             throws IOException
     {

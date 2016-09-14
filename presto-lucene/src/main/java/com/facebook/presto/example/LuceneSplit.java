@@ -30,25 +30,30 @@ public class LuceneSplit
     private final String connectorId;
     private final String schemaName;
     private final String tableName;
-    private final URI uri;
+//    private final URI uri;
     private final boolean remotelyAccessible;
     private final List<HostAddress> addresses;
+    private final int partNumber;
 
     @JsonCreator
     public LuceneSplit(
             @JsonProperty("connectorId") String connectorId,
             @JsonProperty("schemaName") String schemaName,
             @JsonProperty("tableName") String tableName,
-            @JsonProperty("uri") URI uri)
+//            @JsonProperty("uri") URI uri) //annotated by cubeli for lucene do not need a uri to get data
+            @JsonProperty("addresses") List<HostAddress> addresses //added by cubeli
+            )
     {
         this.schemaName = requireNonNull(schemaName, "schema name is null");
         this.connectorId = requireNonNull(connectorId, "connector id is null");
         this.tableName = requireNonNull(tableName, "table name is null");
-        this.uri = requireNonNull(uri, "uri is null");
+//        this.uri = requireNonNull(uri, "uri is null");
 
 //        if ("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme())) {
         remotelyAccessible = true;
-        addresses = ImmutableList.of(HostAddress.fromUri(uri));
+//        addresses = ImmutableList.of(HostAddress.fromUri(uri));
+        this.addresses = addresses;
+        this.partNumber = 1;
     }
 
     @JsonProperty
@@ -69,10 +74,12 @@ public class LuceneSplit
         return tableName;
     }
 
+    //annotated by cubeli 
     @JsonProperty
     public URI getUri()
     {
-        return uri;
+//        return uri;
+    	return null;
     }
 
     @Override
@@ -81,6 +88,7 @@ public class LuceneSplit
         // only http or https is remotely accessible
         return remotelyAccessible;
     }
+
 
     @Override
     public List<HostAddress> getAddresses()
@@ -93,4 +101,9 @@ public class LuceneSplit
     {
         return this;
     }
+
+	public int getPartNumber() {
+		// TODO Auto-generated method stub
+		return partNumber;
+	}
 }

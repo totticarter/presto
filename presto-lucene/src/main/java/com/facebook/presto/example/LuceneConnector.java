@@ -37,7 +37,7 @@ public class LuceneConnector
     private final LuceneSplitManager splitManager;
     private final LuceneRecordSetProvider recordSetProvider;
 
-    @Inject
+//    @Inject
     public LuceneConnector(
             LifeCycleManager lifeCycleManager,
             LuceneMetadata metadata,

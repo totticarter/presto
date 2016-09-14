@@ -1007,6 +1007,7 @@ public class LocalExecutionPlanner
                     .map(expression -> toRowExpression(expression, expressionTypes))
                     .collect(toImmutableList());
 
+            //annotated by cubeli, code generation will be bypassed
            /* try {
                 if (columns != null) {
                     Supplier<CursorProcessor> cursorProcessor = compiler.compileCursorProcessor(translatedFilter, translatedProjections, sourceNode.getId());

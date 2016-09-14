@@ -61,7 +61,7 @@ public class LucenePlugin
     @Override
     public Iterable<ConnectorFactory> getConnectorFactories(ConnectorFactoryContext context)
     {
-        return ImmutableList.of(new LuceneConnectorFactory(context.getTypeManager(), optionalConfig));
+        return ImmutableList.of(new LuceneConnectorFactory(context.getTypeManager(), optionalConfig, context.getNodeManager()));
     }
     
 }

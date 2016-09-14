@@ -18,8 +18,11 @@ import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.ConnectorSplitSource;
 import com.facebook.presto.spi.ConnectorTableLayoutHandle;
 import com.facebook.presto.spi.FixedSplitSource;
+import com.facebook.presto.spi.Node;
+import com.facebook.presto.spi.NodeManager;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
+import com.google.common.collect.ImmutableList;
 
 import javax.inject.Inject;
 
@@ -27,6 +30,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static com.facebook.presto.example.Types.checkType;
 import static com.google.common.base.Preconditions.checkState;
@@ -37,13 +41,29 @@ public class LuceneSplitManager
 {
     private final String connectorId;
     private final LuceneClient exampleClient;
+    
+    //added by cubeli
+    private final NodeManager nodeManager;
+    private int splitsPerNode;
 
-    @Inject
-    public LuceneSplitManager(LuceneConnectorId connectorId, LuceneClient exampleClient)
+    //annotate by cubeli, for lucene do not need a client to get the schema info
+//    @Inject
+//    public LuceneSplitManager(LuceneConnectorId connectorId, LuceneClient exampleClient)
+//    {
+//        this.connectorId = requireNonNull(connectorId, "connectorId is null").toString();
+//        this.exampleClient = requireNonNull(exampleClient, "client is null");
+//    }
+    
+//    @Inject
+    public LuceneSplitManager(LuceneConnectorId connectorId, NodeManager nodeManager, int splitsPerNode)
     {
         this.connectorId = requireNonNull(connectorId, "connectorId is null").toString();
-        this.exampleClient = requireNonNull(exampleClient, "client is null");
+        this.nodeManager = nodeManager;
+        this.splitsPerNode = splitsPerNode;
+        this.exampleClient = null;
     }
+    
+
 
     @Override
     public ConnectorSplitSource getSplits(ConnectorTransactionHandle handle, ConnectorSession session, ConnectorTableLayoutHandle layout)
@@ -54,12 +74,21 @@ public class LuceneSplitManager
         // this can happen if table is removed during a query
         checkState(table != null, "Table %s.%s no longer exists", tableHandle.getSchemaName(), tableHandle.getTableName());
 
-        List<ConnectorSplit> splits = new ArrayList<>();
-        for (URI uri : table.getSources()) {
-            splits.add(new LuceneSplit(connectorId, tableHandle.getSchemaName(), tableHandle.getTableName(), uri));
+//        List<ConnectorSplit> splits = new ArrayList<>();
+//        for (URI uri : table.getSources()) {
+//            splits.add(new LuceneSplit(connectorId, tableHandle.getSchemaName(), tableHandle.getTableName(), uri));
+//        }
+//        Collections.shuffle(splits);
+        
+        Set<Node> nodes = nodeManager.getActiveDatasourceNodes(connectorId);
+        ImmutableList.Builder<ConnectorSplit> splits = ImmutableList.builder();
+        for (Node node : nodes) {
+            for (int i = 0; i < splitsPerNode; i++) {
+                splits.add(new LuceneSplit(connectorId, tableHandle.getSchemaName(), tableHandle.getTableName(), ImmutableList.of(node.getHostAndPort())));
+            }
         }
-        Collections.shuffle(splits);
+        
 
-        return new FixedSplitSource(splits);
+        return new FixedSplitSource(splits.build());
     }
 }
