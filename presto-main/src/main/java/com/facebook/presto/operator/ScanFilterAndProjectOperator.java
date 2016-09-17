@@ -230,6 +230,8 @@ public class ScanFilterAndProjectOperator
             createSourceIfNecessary();
 
             if (cursor != null) {
+		
+		//如果这里使用解释型来处理，可以跟踪到多通道hash值得产生过程，但是具体原理还没有搞明白
                 int rowsProcessed = cursorProcessor.process(operatorContext.getSession().toConnectorSession(), cursor, ROWS_PER_PAGE, pageBuilder);
 
                 pageSourceMemoryContext.setBytes(cursor.getSystemMemoryUsage());
