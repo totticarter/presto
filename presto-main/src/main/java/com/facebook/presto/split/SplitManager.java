@@ -19,6 +19,7 @@ import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorSplitSource;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 //import com.facebook.presto.tpch.TpchTableLayoutHandle;
+//import com.facebook.presto.example.LuceneSplitManager;
 import com.facebook.presto.sql.tree.Expression;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,22 +39,27 @@ public class SplitManager
 
     public SplitSource getSplits(Session session, TableLayoutHandle layout, Expression predicate)
     {
-//    	//added by cubeli start
+    	//added by cubeli start 使用这种方法会导致在构建项目时maven的jar包相互依赖的问题，因为底层依赖上层，现在上层又要依赖底层
 //    	if(layout.getConnectorHandle() instanceof TpchTableLayoutHandle){
 //    		
 //    		TpchTableLayoutHandle tpchTableLayoutHandle = (TpchTableLayoutHandle)layout.getConnectorHandle();
 //    		tpchTableLayoutHandle.setIndexPaths(null);
 //    	}
-//    	//added by cubeli end
-    	layout.setPredicate(predicate);
+    	
+//      if(splitManager instanceof LuceneSplitManager){
+//    	
+//    	LuceneSplitManager splitManager = (LuceneSplitManager)splitManager;
+//    	splitManager.setPridcate(predicate);
+//    }
+    	
+    	
     	
         String connectorId = layout.getConnectorId();
         ConnectorSplitManager splitManager = getConnectorSplitManager(connectorId);
 
         // assumes connectorId and catalog are the same
-        ConnectorSession connectorSession = session.toConnectorSession(connectorId);
-
-        ConnectorSplitSource source = splitManager.getSplits(layout.getTransactionHandle(), connectorSession, layout.getConnectorHandle());
+        ConnectorSession connectorSession = session.toConnectorSession(connectorId);  
+        ConnectorSplitSource source = splitManager.getSplits(layout.getTransactionHandle(), connectorSession, layout.getConnectorHandle(), predicate); 
 
         return new ConnectorAwareSplitSource(connectorId, layout.getTransactionHandle(), source);
     }

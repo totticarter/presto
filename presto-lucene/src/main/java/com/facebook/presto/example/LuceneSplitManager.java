@@ -22,19 +22,18 @@ import com.facebook.presto.spi.Node;
 import com.facebook.presto.spi.NodeManager;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
+import com.facebook.presto.sql.parser.SqlBaseParser.LogicalBinaryContext;
+import com.facebook.presto.sql.tree.ComparisonExpression;
+import com.facebook.presto.sql.tree.Expression;
+import com.facebook.presto.sql.tree.LogicalBinaryExpression;
+import com.facebook.presto.sql.tree.SymbolReference;
 import com.google.common.collect.ImmutableList;
-
-import javax.inject.Inject;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import static com.facebook.presto.example.Types.checkType;
-import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
+
+import java.util.Map;
 
 public class LuceneSplitManager
         implements ConnectorSplitManager
@@ -45,14 +44,7 @@ public class LuceneSplitManager
     //added by cubeli
     private final NodeManager nodeManager;
     private int splitsPerNode;
-
-    //annotate by cubeli, for lucene do not need a client to get the schema info
-//    @Inject
-//    public LuceneSplitManager(LuceneConnectorId connectorId, LuceneClient exampleClient)
-//    {
-//        this.connectorId = requireNonNull(connectorId, "connectorId is null").toString();
-//        this.exampleClient = requireNonNull(exampleClient, "client is null");
-//    }
+    private Expression pridcate;
     
 //    @Inject
     public LuceneSplitManager(LuceneConnectorId connectorId, NodeManager nodeManager, int splitsPerNode)
@@ -66,19 +58,14 @@ public class LuceneSplitManager
 
 
     @Override
-    public ConnectorSplitSource getSplits(ConnectorTransactionHandle handle, ConnectorSession session, ConnectorTableLayoutHandle layout)
+    public ConnectorSplitSource getSplits(ConnectorTransactionHandle handle, ConnectorSession session, ConnectorTableLayoutHandle layout, Expression predicate)
     {
         LuceneTableLayoutHandle layoutHandle = checkType(layout, LuceneTableLayoutHandle.class, "layout");
         LuceneTableHandle tableHandle = layoutHandle.getTable();
-//        LuceneTable table = exampleClient.getTable(tableHandle.getSchemaName(), tableHandle.getTableName());
-//        // this can happen if table is removed during a query
-//        checkState(table != null, "Table %s.%s no longer exists", tableHandle.getSchemaName(), tableHandle.getTableName());
-
-//        List<ConnectorSplit> splits = new ArrayList<>();
-//        for (URI uri : table.getSources()) {
-//            splits.add(new LuceneSplit(connectorId, tableHandle.getSchemaName(), tableHandle.getTableName(), uri));
-//        }
-//        Collections.shuffle(splits);
+        
+//        String theDates
+        getPartitions(predicate);
+        
         
         Set<Node> nodes = nodeManager.getActiveDatasourceNodes(connectorId);
         ImmutableList.Builder<ConnectorSplit> splits = ImmutableList.builder();
@@ -90,5 +77,32 @@ public class LuceneSplitManager
         
 
         return new FixedSplitSource(splits.build());
+    }
+    
+    //			IP			Table		Group,	Partition
+    private Map<String, Map<String, Map<String, String>>> getHermesPartitionInfo(){
+    	
+    	
+    	return null;
+    }
+    
+    private void  getPartitions(Expression predicate){
+    	
+    	if(predicate instanceof LogicalBinaryExpression){
+    		
+    		LogicalBinaryExpression originalExp = (LogicalBinaryExpression)predicate;
+    		Expression left1 = originalExp.getLeft();
+    		if(left1 instanceof ComparisonExpression){
+    			
+    			ComparisonExpression ce = (ComparisonExpression)left1;
+    			SymbolReference sr = (SymbolReference)ce.getLeft();
+    			if(sr.getName().equals("custkey")){
+    				
+    				String name = sr.getName();
+    				System.out.println(name);
+    			}
+
+    		}
+    	}
     }
 }

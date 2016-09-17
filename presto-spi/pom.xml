@@ -32,6 +32,13 @@
             <artifactId>jol-core</artifactId>
         </dependency>
 
+	<!--added by cubeli for  -->
+        <dependency>
+            <groupId>com.facebook.presto</groupId>
+            <artifactId>presto-parser</artifactId>
+	    <version>0.153-SNAPSHOT</version>
+        </dependency>
+
         <!-- for testing -->
         <dependency>
             <groupId>org.testng</groupId>

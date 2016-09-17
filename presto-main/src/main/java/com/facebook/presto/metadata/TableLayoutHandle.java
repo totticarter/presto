@@ -46,10 +46,13 @@ public final class TableLayoutHandle
     }
 
     //added by cubeli for get partition info from sql
-    
     public void setPredicate(Expression e){
     	
     	originalConstraint = e;
+    }
+    public Expression getPredicate(){
+    	
+    	return originalConstraint;
     }
     
     @JsonProperty

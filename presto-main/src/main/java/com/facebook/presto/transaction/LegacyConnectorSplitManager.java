@@ -18,8 +18,11 @@ import com.facebook.presto.spi.ConnectorSplitSource;
 import com.facebook.presto.spi.ConnectorTableLayoutHandle;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
+import com.facebook.presto.sql.tree.Expression;
 
 import static java.util.Objects.requireNonNull;
+
+import org.apache.commons.math3.analysis.function.Exp;
 
 public class LegacyConnectorSplitManager
         implements ConnectorSplitManager
@@ -32,7 +35,8 @@ public class LegacyConnectorSplitManager
     }
 
     @Override
-    public ConnectorSplitSource getSplits(ConnectorTransactionHandle transactionHandle, ConnectorSession session, ConnectorTableLayoutHandle layout)
+    //aaaaa
+    public ConnectorSplitSource getSplits(ConnectorTransactionHandle transactionHandle, ConnectorSession session, ConnectorTableLayoutHandle layout, Expression e)
     {
         return splitManager.getSplits(session, layout);
     }

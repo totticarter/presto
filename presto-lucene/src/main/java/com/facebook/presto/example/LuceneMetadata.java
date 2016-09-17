@@ -26,12 +26,10 @@ import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.SchemaTablePrefix;
 import com.facebook.presto.spi.TableNotFoundException;
 import com.facebook.presto.spi.connector.ConnectorMetadata;
-import com.facebook.presto.spi.type.BigintType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import javax.inject.Inject;
+import com.google.common.collect.Multiset.Entry;
 
 import java.util.List;
 import java.util.Map;
@@ -50,24 +48,23 @@ import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
 
+import org.apache.solr.schema.FieldType;
+import org.apache.solr.schema.IndexSchema;
+import org.apache.solr.schema.SchemaField;
+
 public class LuceneMetadata
         implements ConnectorMetadata
 {
     private final String connectorId;
-
-//    private final LuceneClient luceneClient;
-    
     private final Map<String, Map<String, LuceneTable>> schemas;
 
-//    @Inject
     public LuceneMetadata(LuceneConnectorId connectorId, LuceneClient exampleClient)
     {
         this.connectorId = requireNonNull(connectorId, "connectorId is null").toString();
-//        this.luceneClient = requireNonNull(exampleClient, "client is null");
-        this.schemas = getSchemasFromHdfs();
+        this.schemas = getSchemasTest();
     }
 
-    private Map<String, Map<String, LuceneTable>> getSchemasFromHdfs() {
+    private Map<String, Map<String, LuceneTable>> getSchemasTest() {
 		
     	List<LuceneColumn> columns = new ArrayList<LuceneColumn>();
     	LuceneColumn lc1 = new LuceneColumn("custkey", BIGINT); columns.add(lc1);
@@ -85,6 +82,21 @@ public class LuceneMetadata
     	
 		return s1;
 	}
+    
+    private Map<String, Map<String, LuceneTable>> getSchemasFromHDFS(){
+    	
+    	IndexSchema indexSchema = new IndexSchema(null, null, null);
+    	Map<String, SchemaField> fields = indexSchema.getFields();
+    	//如何获取schema名和表名? 
+    	//把字段组合成LuceneTable
+    	for(java.util.Map.Entry<String, SchemaField> entry: fields.entrySet()){
+    		
+    		String fieldName = entry.getValue().getName();
+    		FieldType fieldType = entry.getValue().getType();
+    	}
+    	
+    	return null;
+    }
 
 	@Override
     public List<String> listSchemaNames(ConnectorSession session)
@@ -94,7 +106,6 @@ public class LuceneMetadata
 
     public List<String> listSchemaNames()
     {
-//        return ImmutableList.copyOf(luceneClient.getSchemaNames());
     	return new ArrayList<>(schemas.keySet());
     }
 
@@ -105,7 +116,6 @@ public class LuceneMetadata
             return null;
         }
 
-//        LuceneTable table = luceneClient.getTable(tableName.getSchemaName(), tableName.getTableName());
         LuceneTable table = getTableHandle(tableName.getSchemaName(), tableName.getTableName());
         if (table == null) {
             return null;
@@ -151,13 +161,11 @@ public class LuceneMetadata
             schemaNames = ImmutableSet.of(schemaNameOrNull);
         }
         else {
-//            schemaNames = luceneClient.getSchemaNames();
         	schemaNames = schemas.keySet();
         }
 
         ImmutableList.Builder<SchemaTableName> builder = ImmutableList.builder();
         for (String schemaName : schemaNames) {
-//            for (String tableName : luceneClient.getTableNames(schemaName)) {
         	for(String tableName: schemas.get(schemaName).keySet()){
                 builder.add(new SchemaTableName(schemaName, tableName));
             }
@@ -207,7 +215,6 @@ public class LuceneMetadata
             return null;
         }
 
-//        LuceneTable table = luceneClient.getTable(tableName.getSchemaName(), tableName.getTableName());
         LuceneTable table = schemas.get(tableName.getSchemaName()).get(tableName.getTableName());
         if (table == null) {
             return null;

@@ -58,18 +58,17 @@
 	    <version>6.1.0</version>
 	</dependency>
 
-	<!--
-	<dependency>
-	    <groupId>org.apache.lucene</groupId>
-	        <artifactId>lucene-analyzers-common</artifactId>
-	     <version>6.1.0</version>
-	</dependency>
-	-->
-
 	<dependency>
 	    <groupId>org.apache.lucene</groupId>
 	        <artifactId>lucene-queryparser</artifactId>
 	    <version>6.1.0</version>
+    	</dependency>
+	
+	<!-- solr dependencies-->
+	<dependency>
+	    <groupId>org.apache.solr</groupId>
+	        <artifactId>solr-core</artifactId>
+	    <version>6.2.0</version>
     	</dependency>
 
         <!-- Presto SPI -->
@@ -77,6 +76,13 @@
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-spi</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+	<!--added by cubeli -->
+        <dependency>
+            <groupId>com.facebook.presto</groupId>
+            <artifactId>presto-parser</artifactId>
+            <scope>0.153-SNAPSHOT</scope>
         </dependency>
 
         <dependency>
@@ -97,27 +103,13 @@
             <scope>provided</scope>
         </dependency>
 
-	<!--
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-	-->
-
-	<!--
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <scope>provided</scope>
-        </dependency>
-	-->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
         <!-- for testing -->
+	<!-- annotated by cuebli for include lucene module to presto-main -->
         <dependency>
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-main</artifactId>
