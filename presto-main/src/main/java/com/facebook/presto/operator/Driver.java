@@ -372,7 +372,7 @@ public class Driver
                 	 *   1.2 如果调用continue方法，则show操作不会停止，因为会一直循环
                 	 */
 //                	current.finish();
-//                	continue;
+                	continue;
                 }           
                 
                 Operator next = operators.get(i + 1);

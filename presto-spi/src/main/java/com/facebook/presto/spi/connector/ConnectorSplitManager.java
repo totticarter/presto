@@ -25,7 +25,7 @@ public interface ConnectorSplitManager
 	//aaaaa
 	default ConnectorSplitSource getSplits(ConnectorTransactionHandle transactionHandle, ConnectorSession session, ConnectorTableLayoutHandle layout, Expression predicate)
     {
-    	Expression expression = new ComparisonExpression(null,null,null);
+//    	Expression expression = new ComparisonExpression(null,null,null);
         throw new UnsupportedOperationException("not yet implemented");
     }
 }

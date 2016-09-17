@@ -36,6 +36,7 @@ import com.google.common.primitives.Ints;
 //import com.sun.tools.javac.util.Pair;
 import com.facebook.presto.spi.type.DoubleType;
 
+import io.airlift.slice.Slice;
 import io.airlift.units.DataSize;
 import io.airlift.units.DataSize.Unit;
 import com.facebook.presto.spi.block.Block;
@@ -344,7 +345,7 @@ public class HashAggregationOperator
     	
 		if (step == Step.PARTIAL) {
 			
-			return getLucenePage2();
+			return getLucenePage4();
 		} else {
 
 			return getPrestoPage();
@@ -411,8 +412,8 @@ public class HashAggregationOperator
     	return returnList;
     }
     
-    //added by cubeli for luecne  
     /*
+     * added by cubeli for luecne 
      * this method is designed for multi-groupby
      * and it process the hash block as an normal block
      */
@@ -471,7 +472,80 @@ public class HashAggregationOperator
     	return expectedPage;
     }
     
+    /*
+     * added by cubeli
+     * 该方法也用于产生一个page，但是参考的是RecordPageSource的getNextPage方法
+     * 因为该方法可以很好的处理不同类型的数据,但是移植过来时去掉了很多异常处理
+     */
     
+    public class LuceneGroupByResult{
+    	
+    	Boolean getBoolean(int columnIdx){
+    		
+    		return null;
+    	}
+    	
+    	Long getLong(int columnIdx){
+    		
+    		return null;
+    	}
+    	
+    	Double getDouble(int columnIdx){
+    		
+    		return null;
+    	}
+    	
+    	Slice getSlice(int columnIdx){
+    		
+    		return null;
+    	}
+    	
+    	Object getObject(int columnIdx){
+    		
+    		return null;
+    	}
+    }
+	private Page getLucenePage4(){
+		
+		LuceneGroupByResult lgbr = new LuceneGroupByResult();
+		
+		int groupByKeySize = groupByKeys.size();
+		PageBuilder pageBuilder = new PageBuilder(types);
+        for (int column = 0; column < types.size(); column++) {
+        	
+    		if(column == groupByKeySize){
+    			
+    			//TODO build this hash block
+    		}
+        	
+            BlockBuilder output = pageBuilder.getBlockBuilder(column);
+
+            Type type = types.get(column);
+            Class<?> javaType = type.getJavaType();
+            if (javaType == boolean.class) {
+                type.writeBoolean(output, lgbr.getBoolean(column));
+            }
+            else if (javaType == long.class) {
+                type.writeLong(output, lgbr.getLong(column));
+            }
+            else if (javaType == double.class) {
+                type.writeDouble(output, lgbr.getDouble(column));
+            }
+            else if (javaType == Slice.class) {
+                Slice slice = lgbr.getSlice(column);
+                type.writeSlice(output, slice, 0, slice.length());
+            }
+            else {
+                type.writeObject(output, lgbr.getObject(column));
+            }
+        }
+
+        Page page = pageBuilder.build();
+        pageBuilder.reset();
+
+        return page;
+    
+	}
     
     List<List<String>> newTestLuceneResult3(){
     	
