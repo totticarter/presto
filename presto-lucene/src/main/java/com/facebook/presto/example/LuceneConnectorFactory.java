@@ -122,7 +122,7 @@ public class LuceneConnectorFactory
             @Override
             public ConnectorNodePartitioningProvider getNodePartitioningProvider()
             {
-                return new LuenceNodePartitioningProvider(connectorId, nodeManager, splitsPerNode);
+                return new LuceneNodePartitioningProvider(connectorId, nodeManager, splitsPerNode);
 //            	return null;
             }
         };
