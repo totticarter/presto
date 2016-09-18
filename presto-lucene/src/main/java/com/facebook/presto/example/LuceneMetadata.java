@@ -48,9 +48,9 @@ import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
 
-import org.apache.solr.schema.FieldType;
-import org.apache.solr.schema.IndexSchema;
-import org.apache.solr.schema.SchemaField;
+//import org.apache.solr.schema.FieldType;
+//import org.apache.solr.schema.IndexSchema;
+//import org.apache.solr.schema.SchemaField;
 
 public class LuceneMetadata
         implements ConnectorMetadata
@@ -85,15 +85,15 @@ public class LuceneMetadata
     
     private Map<String, Map<String, LuceneTable>> getSchemasFromHDFS(){
     	
-    	IndexSchema indexSchema = new IndexSchema(null, null, null);
-    	Map<String, SchemaField> fields = indexSchema.getFields();
-    	//如何获取schema名和表名? 
-    	//把字段组合成LuceneTable
-    	for(java.util.Map.Entry<String, SchemaField> entry: fields.entrySet()){
-    		
-    		String fieldName = entry.getValue().getName();
-    		FieldType fieldType = entry.getValue().getType();
-    	}
+//    	IndexSchema indexSchema = new IndexSchema(null, null, null);
+//    	Map<String, SchemaField> fields = indexSchema.getFields();
+//    	//如何获取schema名和表名? 
+//    	//把字段组合成LuceneTable
+//    	for(java.util.Map.Entry<String, SchemaField> entry: fields.entrySet()){
+//    		
+//    		String fieldName = entry.getValue().getName();
+//    		FieldType fieldType = entry.getValue().getType();
+//    	}
     	
     	return null;
     }

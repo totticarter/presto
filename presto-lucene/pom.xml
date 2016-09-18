@@ -64,12 +64,13 @@
 	    <version>6.1.0</version>
     	</dependency>
 	
-	<!-- solr dependencies-->
+	<!-- solr dependencies
 	<dependency>
 	    <groupId>org.apache.solr</groupId>
 	        <artifactId>solr-core</artifactId>
 	    <version>6.2.0</version>
     	</dependency>
+	-->
 
         <!-- Presto SPI -->
         <dependency>
